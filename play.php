@@ -42,13 +42,14 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 }
 
 echo "rpos[0][101] = 0;\n";
-echo "rpos[0][102] = 0;\n";
-echo "rpos[0][103] = 0;\n";
-echo "rpos[0][104] = 0;\n";
-echo "rpos[0][105] = 0;\n";
+echo "rpos[0][102] = 100;\n";
+echo "rpos[0][103] = 100;\n";
+echo "rpos[0][104] = 100;\n";
+echo "rpos[0][105] = 100;\n";
 echo "rpos[0][106] = 100;\n";
+echo "rpos[0][107] = 100;\n";
 
-echo "rpar[0][103] = 10;\n";
+echo "rpar[0][103] = 6;\n";
 ?>
 
 let color_to_pid = [];
@@ -200,10 +201,21 @@ function ValidateRule(rid) {
 
 function DisablePawnsFirst(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][103]) return;
+  if (game.history().length > rpar[pid][103] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.piece !== 'p') {
+      posMoves[i].disabled = 1;
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisablePawnsDoubleMove(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.flags === 'b') {
       posMoves[i].disabled = 1;
     }
   }
@@ -264,6 +276,7 @@ function DisableMoves() {
   DisableCantMoveIfAttacked(104);
   DisablePawnsFirst(103);
   DisableCantCaptureStronger(106);
+  DisablePawnsDoubleMove(107);
 }
 
 function ChooseRules() {
