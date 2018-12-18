@@ -197,6 +197,14 @@ function ValidateRule(rid) {
       }
     }
   }
+  //console.log(rid, JSON.stringify(posMoves));
+}
+
+// Disable move only if it is not disabled (to avoid setting disabled=2 to disabled=1
+function DisableMove(i) {
+  if (posMoves[i].disabled === 0) {
+    posMoves[i].disabled = 1;
+  }
 }
 
 function DisablePawnsFirst(rid) {
@@ -205,7 +213,7 @@ function DisablePawnsFirst(rid) {
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.piece !== 'p') {
-      posMoves[i].disabled = 1;
+      DisableMove(i);
     }
   }
   ValidateRule(rid);
@@ -216,7 +224,7 @@ function DisablePawnsDoubleMove(rid) {
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.flags === 'b') {
-      posMoves[i].disabled = 1;
+      DisableMove(i);
     }
   }
   ValidateRule(rid);
@@ -229,7 +237,7 @@ function DisableMustTakeIfStronger(rid) {
     let tpiece = game.get(move.to);
     // Do not disable only if taking with stronger
     if (tpiece && pvalue[move.piece] > pvalue[tpiece.type]) continue;
-    posMoves[i].disabled = 1;
+    DisableMove(i);
   }
   ValidateRule(rid);
 }
@@ -241,7 +249,7 @@ function DisableCantCaptureStronger(rid) {
     let tpiece = game.get(move.to);
     // Disable if taking a stronger
     if (tpiece && pvalue[move.piece] < pvalue[tpiece.type])
-        posMoves[i].disabled = 1;
+      DisableMove(i);
   }
   ValidateRule(rid);
 }
@@ -252,7 +260,7 @@ function DisableCantMoveIfAttacked(rid) {
     let move = posMoves[i];
     // Skip not attacked squares that start moves
     if (!game.attacked(game.them(), move.from)) continue;
-    posMoves[i].disabled = 1;
+    DisableMove(i);
   }
   ValidateRule(rid);
 }
@@ -263,7 +271,7 @@ function DisableCanMoveOnlyAttacked(rid) {
     let move = posMoves[i];
     // Skip attacked squares that start moves
     if (game.attacked(game.them(), move.from)) continue;
-    posMoves[i].disabled = 1;
+    DisableMove(i);
   }
   ValidateRule(rid);
 }
