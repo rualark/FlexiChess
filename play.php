@@ -10,7 +10,7 @@ echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n
 echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='https://code.jquery.com/jquery-1.12.4.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
-echo "<script src='chessboardjs/js/chess.min.js'></script>\n";
+echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<div id='board' style='width: 700px'></div>\n";
 echo "<p><span id=status></span></p>";
 //echo "<p>FEN: <span id=fen></span></p>";
@@ -44,7 +44,8 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 echo "rpos[0][101] = 0;\n";
 echo "rpos[0][102] = 0;\n";
 echo "rpos[0][103] = 0;\n";
-echo "rpos[0][104] = 100;\n";
+echo "rpos[0][104] = 0;\n";
+echo "rpos[0][105] = 100;\n";
 
 echo "rpar[0][103] = 10;\n";
 ?>
@@ -222,7 +223,19 @@ function DisableCantMoveIfAttacked(rid) {
   if (!ract[rid]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (!game.attacked())
+    // Skip not attacked squares that start moves
+    if (!game.attacked(game.them(), move.from)) continue;
+    posMoves[i].disabled = 1;
+  }
+  ValidateRule(rid);
+}
+
+function DisableCanMoveOnlyAttacked(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    // Skip attacked squares that start moves
+    if (game.attacked(game.them(), move.from)) continue;
     posMoves[i].disabled = 1;
   }
   ValidateRule(rid);
@@ -231,8 +244,10 @@ function DisableCantMoveIfAttacked(rid) {
 function DisableMoves() {
   // First run checks that force moves
   DisableMustTakeIfStronger(102);
-  DisablePawnsFirst(103);
+  DisableCanMoveOnlyAttacked(105);
+  // Now run checks that disable moves
   DisableCantMoveIfAttacked(104);
+  DisablePawnsFirst(103);
 }
 
 function ChooseRules() {
