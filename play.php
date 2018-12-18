@@ -45,7 +45,8 @@ echo "rpos[0][101] = 0;\n";
 echo "rpos[0][102] = 0;\n";
 echo "rpos[0][103] = 0;\n";
 echo "rpos[0][104] = 0;\n";
-echo "rpos[0][105] = 100;\n";
+echo "rpos[0][105] = 0;\n";
+echo "rpos[0][106] = 100;\n";
 
 echo "rpar[0][103] = 10;\n";
 ?>
@@ -184,13 +185,16 @@ function ValidateRule(rid) {
   // Revert rules that give no possible moves
   if (findObjectByKey(posMoves, 'disabled', 0) === null) {
     RevertRule();
+    ract[rid] = 3;
   }
   // Apply other rules
   else {
     for (let i=0; i<posMoves.length; ++i) {
-      if (posMoves[i].disabled === 1) posMoves[i].disabled = 2;
+      if (posMoves[i].disabled === 1) {
+        ract[rid] = 2;
+        posMoves[i].disabled = 2;
+      }
     }
-    ract[rid] = 2;
   }
 }
 
@@ -210,11 +214,22 @@ function DisableMustTakeIfStronger(rid) {
   if (!ract[rid]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    let piece = game.get(move.to);
-    // Do not flag only if taking with stronger
-    console.log(piece, move.piece);
-    if (piece && pvalue[move.piece] > pvalue[piece.type]) continue;
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking with stronger
+    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type]) continue;
     posMoves[i].disabled = 1;
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureStronger(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking a stronger
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type])
+        posMoves[i].disabled = 1;
   }
   ValidateRule(rid);
 }
@@ -248,6 +263,7 @@ function DisableMoves() {
   // Now run checks that disable moves
   DisableCantMoveIfAttacked(104);
   DisablePawnsFirst(103);
+  DisableCantCaptureStronger(106);
 }
 
 function ChooseRules() {
@@ -259,18 +275,21 @@ function ChooseRules() {
 }
 
 function ShowRules() {
+  let rst3 = '';
   let rst2 = '';
   let rst1 = '';
   let rst0 = '';
   rpos[pid].forEach(function(pos, rid, arr) {
     if (pos === 0) return;
-    if (ract[rid] === 2) rst2 += rname[rid] + '<br>';
+    if (ract[rid] === 3) rst3 += rname[rid] + '<br>';
+    else if (ract[rid] === 2) rst2 += rname[rid] + '<br>';
     else if (ract[rid] === 1) rst1 += rname[rid] + '<br>';
     else rst0 += rname[rid] + '<br>';
   });
   hst =
     "<font color=red>" + rst2 + "</font>" +
     "<font color=orange>" + rst1 + "</font>" +
+    "<font color=blue>" + rst3 + "</font>" +
     "<font color=green>" + rst0 + "</font>";
   if (game.turn() === 'b') brulesEl.html(hst);
   else wrulesEl.html(hst);
