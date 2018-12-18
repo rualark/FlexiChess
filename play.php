@@ -23,6 +23,9 @@ echo "let rdesc = []; // Rule descriptions\n";
 echo "let rpos = []; // Rule possibility for each player\n";
 echo "rpos[0] = [];\n";
 echo "rpos[1] = [];\n";
+echo "let rpar = []; // Rule parameters for each player\n";
+echo "rpar[0] = [];\n";
+echo "rpar[1] = [];\n";
 $rdb = new CsvDb;
 $fname = "rules/rules.csv";
 echo $rdb->Open($fname);
@@ -37,6 +40,8 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 echo "rpos[0][101] = 100;\n";
 echo "rpos[0][102] = 50;\n";
 echo "rpos[0][103] = 50;\n";
+echo "rpar[0][103] = [];\n";
+echo "rpar[0][103][0] = 4;\n";
 echo "</script>";
 ?>
 
@@ -76,7 +81,8 @@ let onMouseoverSquare = function(square, piece) {
 
   // highlight the possible squares for this piece
   for (let i = 0; i < posMoves.length; i++) {
-    if (posMoves[i].from == square) {
+    if (posMoves[i].disabled) continue;
+    if (posMoves[i].from === square) {
       greySquare(posMoves[i].to);
       greySquare(square);
     }
@@ -105,7 +111,7 @@ let onDrop = function(source, target) {
 
   let found = 0;
   for (let i=0; i<posMoves.length; ++i) {
-    if (posMoves[i].from === source  && posMoves[i].to === target) {
+    if (posMoves[i].from === source  && posMoves[i].to === target && posMoves[i].disabled === 0) {
       found = 1;
       break;
     }
@@ -126,11 +132,45 @@ let onDrop = function(source, target) {
   updateStatus();
 };
 
-// update the board position after the piece snap 
+// update the board position after the piece snap
 // for castling, en passant, pawn promotion
 let onSnapEnd = function() {
   board.position(game.fen());
 };
+
+function findObjectByKey(array, key, value) {
+  for (let i = 0; i < array.length; i++) {
+    if (array[i][key] === value) {
+      return array[i];
+    }
+  }
+  return null;
+}
+
+function DisableMoves() {
+  if (game.turn() === 'w') return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.piece === 'p') {
+      boardEl.find('.square-' + move.from).addClass('highlight-red');
+    }
+    else {
+      posMoves[i].disabled = 1;
+    }
+  }
+  // Revert rules that give no possible moves
+  if (findObjectByKey(posMoves, 'disabled', 0) === null) {
+    for (let i=0; i<posMoves.length; ++i) {
+      if (posMoves[i].disabled === 1) posMoves[i].disabled = 0;
+    }
+  }
+  // Apply other rules
+  else {
+    for (let i=0; i<posMoves.length; ++i) {
+      if (posMoves[i].disabled === 1) posMoves[i].disabled = 2;
+    }
+  }
+}
 
 let updateStatus = function() {
   let status = '';
@@ -157,18 +197,20 @@ let updateStatus = function() {
     if (game.in_check() === true) {
       status += ', ' + moveColor + ' is in check';
     }
-    // Cycle through moves
-    boardEl.find('.highlight-red').removeClass('highlight-red');
+    // Get maximum moves
     let possibleMoves = game.moves({
       verbose: true
     });
-    posMoves = [];
-    for (let i=0; i<possibleMoves.length; ++i) {
-      let move = possibleMoves[i];
-      if (move.piece === 'p') {
-        boardEl.find('.square-' + move.from).addClass('highlight-red');
-        posMoves.push(move);
-      }
+    posMoves = possibleMoves;
+    for (let i=0; i<posMoves.length; ++i) posMoves[i].disabled = 0;
+    DisableMoves();
+    console.log(posMoves);
+    // Highlight possible moves
+    boardEl.find('.highlight-red').removeClass('highlight-red');
+    for (let i=0; i<posMoves.length; ++i) {
+      let move = posMoves[i];
+      if (move.disabled) continue;
+      boardEl.find('.square-' + move.from).addClass('highlight-red');
     }
   }
 
