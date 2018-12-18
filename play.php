@@ -11,7 +11,7 @@ echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='https://code.jquery.com/jquery-1.12.4.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.min.js'></script>\n";
-echo "<div id='board' style='width: 400px'></div>\n";
+echo "<div id='board' style='width: 700px'></div>\n";
 echo "<p><span id=status></span></p>";
 //echo "<p>FEN: <span id=fen></span></p>";
 echo "<p>PGN: <span id=pgn></span></p>";
@@ -42,10 +42,24 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 }
 
 echo "rpos[0][101] = 100;\n";
-echo "rpos[0][102] = 50;\n";
-echo "rpos[0][103] = 50;\n";
+echo "rpos[0][102] = 100;\n";
+echo "rpos[0][103] = 0;\n";
+
 echo "rpar[0][103] = 10;\n";
 ?>
+
+let color_to_pid = [];
+color_to_pid['b'] = 0;
+color_to_pid['w'] = 1;
+
+// Piece values
+let pvalue = [];
+pvalue['p'] = 1;
+pvalue['b'] = 3;
+pvalue['n'] = 3;
+pvalue['r'] = 5;
+pvalue['q'] = 9;
+pvalue['k'] = 100;
 
 let board,
   game = new Chess(),
@@ -59,7 +73,7 @@ let board,
   pid;
 
 // Possible moves
-let posMoves, ract;
+let posMoves, posMoves2, ract;
 
 let removeGreySquares = function() {
   $('#board .square-55d63').css('background', '');
@@ -148,12 +162,26 @@ function findObjectByKey(array, key, value) {
   return null;
 }
 
+function countObjectsByKey(array, key, value) {
+  let count = 0;
+  for (let i = 0; i < array.length; i++) {
+    if (array[i][key] === value) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+function RevertRule() {
+  for (let i=0; i<posMoves.length; ++i) {
+    if (posMoves[i].disabled === 1) posMoves[i].disabled = 0;
+  }
+}
+
 function ValidateRule(rid) {
   // Revert rules that give no possible moves
   if (findObjectByKey(posMoves, 'disabled', 0) === null) {
-    for (let i=0; i<posMoves.length; ++i) {
-      if (posMoves[i].disabled === 1) posMoves[i].disabled = 0;
-    }
+    RevertRule();
   }
   // Apply other rules
   else {
@@ -169,17 +197,29 @@ function DisablePawnsFirst(rid) {
   if (game.history().length > rpar[pid][103]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (move.piece === 'p') {
-      boardEl.find('.square-' + move.from).addClass('highlight-red');
-    }
-    else {
+    if (move.piece !== 'p') {
       posMoves[i].disabled = 1;
     }
   }
   ValidateRule(rid);
 }
 
+function DisableMustTakeIfStronger(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let piece = game.get(move.to);
+    // Do not flag only if taking with stronger
+    console.log(piece, move.piece);
+    if (piece && pvalue[move.piece] > pvalue[piece.type]) continue;
+    posMoves[i].disabled = 1;
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
+  // First run checks that force moves
+  DisableMustTakeIfStronger(102);
   DisablePawnsFirst(103);
 }
 
@@ -203,7 +243,7 @@ function ShowRules() {
   });
   hst =
     "<font color=red>" + rst2 + "</font>" +
-    "<font color=brown>" + rst1 + "</font>" +
+    "<font color=orange>" + rst1 + "</font>" +
     "<font color=green>" + rst0 + "</font>";
   if (game.turn() === 'b') brulesEl.html(hst);
   else wrulesEl.html(hst);
@@ -238,25 +278,50 @@ let updateStatus = function() {
     posMoves = game.moves({
       verbose: true
     });
-    if (game.turn() === 'w') pid = 1;
-    else pid = 0;
+    pid = color_to_pid[game.turn()];
     for (let i=0; i<posMoves.length; ++i) posMoves[i].disabled = 0;
     ChooseRules();
     DisableMoves();
+    RemoveDisabledMoves();
     ShowRules();
-    // Highlight possible moves
-    boardEl.find('.highlight-red').removeClass('highlight-red');
-    for (let i=0; i<posMoves.length; ++i) {
-      let move = posMoves[i];
-      if (move.disabled) continue;
-      boardEl.find('.square-' + move.from).addClass('highlight-red');
-    }
+    HighlightPosMoves();
+    window.setTimeout(AutoMove, 500);
+    //AutoMove();
   }
 
   statusEl.html(status);
   fenEl.html(game.fen());
   pgnEl.html(game.pgn());
 };
+
+function RemoveDisabledMoves() {
+  posMoves2 = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    if (posMoves[i].disabled === 0) {
+      posMoves2.push(posMoves[i]);
+    }
+  }
+}
+
+function AutoMove() {
+  if (countObjectsByKey(posMoves2, 'disabled', 0) === 1 || ract[101]) {
+    let randomIndex = Math.floor(Math.random() * posMoves2.length);
+    game.move(posMoves2[randomIndex]);
+    board.position(game.fen());
+    removeGreySquares();
+    updateStatus();
+  }
+}
+
+// Highlight possible moves
+function HighlightPosMoves() {
+  boardEl.find('.highlight-red').removeClass('highlight-red');
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.disabled) continue;
+    boardEl.find('.square-' + move.from).addClass('highlight-red');
+  }
+}
 
 let cfg = {
   draggable: true,
