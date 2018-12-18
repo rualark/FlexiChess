@@ -1,0 +1,20 @@
+.highlight-yellow {
+  -webkit-box-shadow: inset 0 0 3px 3px yellow;
+  -moz-box-shadow: inset 0 0 3px 3px yellow;
+  box-shadow: inset 0 0 3px 3px yellow;  
+}
+.highlight-green {
+  -webkit-box-shadow: inset 0 0 3px 3px #00ff00;
+  -moz-box-shadow: inset 0 0 3px 3px #00ff00;
+  box-shadow: inset 0 0 3px 3px #00ff00;  
+}
+.highlight-blue {
+  -webkit-box-shadow: inset 0 0 3px 3px blue;
+  -moz-box-shadow: inset 0 0 3px 3px blue;
+  box-shadow: inset 0 0 3px 3px blue;  
+}
+.highlight-red {
+  -webkit-box-shadow: inset 0 0 3px 3px #aa0000;
+  -moz-box-shadow: inset 0 0 3px 3px #aa0000;
+  box-shadow: inset 0 0 3px 3px #aa0000;  
+}
