@@ -41,9 +41,10 @@ for ($i=0; $i<count($rdb->result); ++$i) {
   echo "rdesc[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rdesc'] . "\";\n";
 }
 
-echo "rpos[0][101] = 100;\n";
-echo "rpos[0][102] = 100;\n";
+echo "rpos[0][101] = 0;\n";
+echo "rpos[0][102] = 0;\n";
 echo "rpos[0][103] = 0;\n";
+echo "rpos[0][104] = 100;\n";
 
 echo "rpar[0][103] = 10;\n";
 ?>
@@ -217,10 +218,21 @@ function DisableMustTakeIfStronger(rid) {
   ValidateRule(rid);
 }
 
+function DisableCantMoveIfAttacked(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (!game.attacked())
+    posMoves[i].disabled = 1;
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   DisableMustTakeIfStronger(102);
   DisablePawnsFirst(103);
+  DisableCantMoveIfAttacked(104);
 }
 
 function ChooseRules() {
