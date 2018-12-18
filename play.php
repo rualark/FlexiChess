@@ -15,17 +15,21 @@ echo "<div id='board' style='width: 400px'></div>\n";
 echo "<p><span id=status></span></p>";
 //echo "<p>FEN: <span id=fen></span></p>";
 echo "<p>PGN: <span id=pgn></span></p>";
-echo "<p><span id=debug></span></p>";
+echo "<p><span id=brules></span></p>";
+echo "<p><span id=wrules></span></p>";
+?>
 
-echo "<script>\n";
-echo "let rname = []; // Rule names\n";
-echo "let rdesc = []; // Rule descriptions\n";
-echo "let rpos = []; // Rule possibility for each player\n";
-echo "rpos[0] = [];\n";
-echo "rpos[1] = [];\n";
-echo "let rpar = []; // Rule parameters for each player\n";
-echo "rpar[0] = [];\n";
-echo "rpar[1] = [];\n";
+<script>
+let rname = []; // Rule names
+let rdesc = []; // Rule descriptions
+let rpos = []; // Rule possibility for each player
+rpos[0] = [];
+rpos[1] = [];
+let rpar = []; // Rule parameters for each player
+rpar[0] = [];
+rpar[1] = [];
+
+<?php
 $rdb = new CsvDb;
 $fname = "rules/rules.csv";
 echo $rdb->Open($fname);
@@ -40,25 +44,22 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 echo "rpos[0][101] = 100;\n";
 echo "rpos[0][102] = 50;\n";
 echo "rpos[0][103] = 50;\n";
-echo "rpar[0][103] = [];\n";
-echo "rpar[0][103][0] = 4;\n";
-echo "</script>";
+echo "rpar[0][103] = 10;\n";
 ?>
 
-<script>
 let board,
   game = new Chess(),
   boardEl = $('#board'),
   statusEl = $('#status'),
-  debugEl = $('#debug'),
+  brulesEl = $('#brules'),
+  wrulesEl = $('#wrules'),
   fenEl = $('#fen'),
   pgnEl = $('#pgn'),
-  squareClass = 'square-55d63',
-  squareToHighlight,
-  colorToHighlight;
+  // Player id
+  pid;
 
 // Possible moves
-let posMoves;
+let posMoves, ract;
 
 let removeGreySquares = function() {
   $('#board .square-55d63').css('background', '');
@@ -147,17 +148,7 @@ function findObjectByKey(array, key, value) {
   return null;
 }
 
-function DisableMoves() {
-  if (game.turn() === 'w') return;
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    if (move.piece === 'p') {
-      boardEl.find('.square-' + move.from).addClass('highlight-red');
-    }
-    else {
-      posMoves[i].disabled = 1;
-    }
-  }
+function ValidateRule(rid) {
   // Revert rules that give no possible moves
   if (findObjectByKey(posMoves, 'disabled', 0) === null) {
     for (let i=0; i<posMoves.length; ++i) {
@@ -169,7 +160,53 @@ function DisableMoves() {
     for (let i=0; i<posMoves.length; ++i) {
       if (posMoves[i].disabled === 1) posMoves[i].disabled = 2;
     }
+    ract[rid] = 2;
   }
+}
+
+function DisablePawnsFirst(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][103]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.piece === 'p') {
+      boardEl.find('.square-' + move.from).addClass('highlight-red');
+    }
+    else {
+      posMoves[i].disabled = 1;
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableMoves() {
+  DisablePawnsFirst(103);
+}
+
+function ChooseRules() {
+  ract = [];
+  rpos[pid].forEach(function(item, i, arr) {
+    if (item === 0) return;
+    if (Math.random()*100 <= item) ract[i] = 1;
+  });
+}
+
+function ShowRules() {
+  let rst2 = '';
+  let rst1 = '';
+  let rst0 = '';
+  rpos[pid].forEach(function(pos, rid, arr) {
+    if (pos === 0) return;
+    if (ract[rid] === 2) rst2 += rname[rid] + '<br>';
+    else if (ract[rid] === 1) rst1 += rname[rid] + '<br>';
+    else rst0 += rname[rid] + '<br>';
+  });
+  hst =
+    "<font color=red>" + rst2 + "</font>" +
+    "<font color=brown>" + rst1 + "</font>" +
+    "<font color=green>" + rst0 + "</font>";
+  if (game.turn() === 'b') brulesEl.html(hst);
+  else wrulesEl.html(hst);
 }
 
 let updateStatus = function() {
@@ -198,13 +235,15 @@ let updateStatus = function() {
       status += ', ' + moveColor + ' is in check';
     }
     // Get maximum moves
-    let possibleMoves = game.moves({
+    posMoves = game.moves({
       verbose: true
     });
-    posMoves = possibleMoves;
+    if (game.turn() === 'w') pid = 1;
+    else pid = 0;
     for (let i=0; i<posMoves.length; ++i) posMoves[i].disabled = 0;
+    ChooseRules();
     DisableMoves();
-    console.log(posMoves);
+    ShowRules();
     // Highlight possible moves
     boardEl.find('.highlight-red').removeClass('highlight-red');
     for (let i=0; i<posMoves.length; ++i) {
