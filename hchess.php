@@ -1,40 +1,16 @@
-<?php
-require_once "lib/lib.php";
-require_once "lib/CsvDb.php";
-
-start_time();
-
-echo "<link rel=icon href='icons/king.ico'>";
-echo "<title>Play FlexiChess</title>\n";
-echo "<script src='https://code.jquery.com/jquery-1.12.4.min.js'></script>\n";
-echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
-echo "<script src='chessboardjs/js/chess.min.js'></script>\n";
-echo "<div id='board' style='width: 400px'></div>\n";
-
-echo "<script>\n";
-echo "MAX_RULES = 200;\n";
-echo "rname = new Array(MAX_RULES); // Rule names\n";
-echo "rdesc = new Array(MAX_RULES); // Rule descriptions\n";
-echo "rpos = new Array(2); // Rule possibility for each player\n";
-echo "rpos[0] = new Array(MAX_RULES);\n";
-echo "rpos[1] = new Array(MAX_RULES);\n";
-$rdb = new CsvDb;
-$fname = "rules/rules.csv";
-echo $rdb->Open($fname);
-//print_r($rdb->header);
-echo $rdb->Select();
-//print_r($rdb->result);
-for ($i=0; $i<count($rdb->result); ++$i) {
-  echo "rname[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rname'] . "\";\n";
-  echo "rdesc[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rdesc'] . "\";\n";
-}
-
-echo "rpos[0][101] = 100;\n";
-echo "rpos[0][102] = 50;\n";
-echo "rpos[0][103] = 50;\n";
-echo "</script>";
-?>
-
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <link rel="stylesheet" href="chessboardjs/css/chessboard-0.3.0.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="chessboardjs/js/chessboard-0.3.0.min.js"></script>
+    <script src="chessboardjs/js/chess.min.js"></script>
+  </head>
+  <body>
+    <div id="board" style="width: 400px"></div>
+  </body>
+</html>
 <script>
 var board,
   game = new Chess(),
@@ -120,7 +96,3 @@ board = ChessBoard('board', cfg);
 
 updateStatus();
 </script>
-
-<?php
-stop_time();
-?>
