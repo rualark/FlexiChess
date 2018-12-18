@@ -1,0 +1,4 @@
+Rid;Rname;Rdesc
+101;Random move;My move is replaced with a random move
+102;Must take if stronger;I must take only if my taking piece is stronger than piece taken. In other cases I can take or not take
+103;Move only pawns until XX moves;I can move only pawns during first XX moves
