@@ -184,8 +184,24 @@ function MakeMove(move) {
   if (tpiece) {
     captures[pid][tnum] = tpiece.type;
   }
-  let res = game.move(move);
-  return res;
+  return game.move(move);
+}
+
+function CapturesCount(player_id) {
+  let cnt = 0;
+  for (let i=0; i<captures[player_id].length; ++i) {
+    if (captures[player_id][i] != null) ++cnt;
+  }
+  return cnt;
+}
+
+function CapturesValue(player_id) {
+  let val = 0;
+  for (let i=0; i<captures[player_id].length; ++i) {
+    if (captures[player_id][i] != null)
+      val += pvalue[captures[player_id][i]];
+  }
+  return val;
 }
 
 function Undo() {
@@ -603,8 +619,8 @@ let updateStatus = function() {
   statusEl.html(status);
   fenEl.html(game.fen());
   pgnEl.html(game.pgn());
-  bcapturesEl.html(JSON.stringify(captures[0]));
-  wcapturesEl.html(JSON.stringify(captures[1]));
+  bcapturesEl.html("Black captures balance: " + (CapturesValue(0) - CapturesValue(1)));
+  wcapturesEl.html("White captures balance: " + (CapturesValue(1) - CapturesValue(0)));
 };
 
 function RemoveDisabledMoves() {
