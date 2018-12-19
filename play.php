@@ -79,11 +79,15 @@ echo "rpos[0][119] = 0;\n";
 echo "rpos[0][120] = 0;\n";
 echo "rpos[0][121] = 0;\n";
 echo "rpos[0][122] = 0;\n";
-echo "rpos[0][123] = 100;\n";
+echo "rpos[0][123] = 0;\n";
+echo "rpos[0][124] = 0;\n";
+echo "rpos[0][125] = 0;\n";
+echo "rpos[0][126] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
-echo "rpar[0][103][0] = 6;\n";
+echo "rpar[0][103][0] = 10;\n";
+echo "rpar[0][103][1] = 3;\n";
 echo "rpar[0][104][0] = 20;\n";
 echo "rpar[0][104][1] = 1;\n";
 echo "rpar[0][105][0] = 20;\n";
@@ -110,6 +114,11 @@ echo "rpar[0][121][0] = 5;\n";
 echo "rpar[0][122][0] = 20;\n";
 echo "rpar[0][123][0] = 20;\n";
 echo "rpar[0][123][1] = 2;\n";
+echo "rpar[0][124][0] = 20;\n";
+echo "rpar[0][125][0] = 20;\n";
+echo "rpar[0][125][1] = 20;\n";
+echo "rpar[0][126][0] = 20;\n";
+echo "rpar[0][126][1] = 20;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -315,9 +324,10 @@ function DisableMove(i) {
   }
 }
 
-function DisablePawnsFirst(rid) {
+function DisablePawns(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (CapturesValue(color_to_pid[game.them()]) >= rpar[pid][rid][1]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.piece !== 'p') {
@@ -533,7 +543,7 @@ function DisableKingNoCaptureFromCheck(rid) {
 function DisableNoFirstCapture(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
-  if (CapturesCount(pid) > 0) return;
+  if (CapturesCount(color_to_pid[game.them()]) > 0) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -597,6 +607,17 @@ function DisableMoveIntoAttack(rid) {
   ValidateRule(rid);
 }
 
+function DisableCantMoveIntoAttack(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (!game.attacked(game.them(), move.to)) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableRemoveAttack(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
@@ -625,7 +646,7 @@ function DisableRemoveAttackNoCapture(rid) {
   ValidateRule(rid);
 }
 
-function DisableRandomPieces(rid) {
+function DisableRandomPieceTypes(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
   // Choose pieces
@@ -648,6 +669,37 @@ function DisableRandomPieces(rid) {
   ValidateRule(rid);
 }
 
+function DisableRandomMoves(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  let dis_cnt = posMoves.length * rpar[pid][rid][1] / 100;
+  for (let i=0; i<dis_cnt; ++i) {
+    let randomIndex = Math.floor(Math.random() * posMoves.length);
+    DisableMove(randomIndex);
+  }
+  ValidateRule(rid);
+}
+
+function DisableRandomPieces(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  let froms = [];
+  // Get unique movable pieces
+  for (let i=0; i<posMoves.length; ++i) {
+    froms[posMoves[i].from] = 1;
+  }
+  // Scan unique movable pieces
+  for (let key in froms) {
+    if (Math.random() * 100 > rpar[pid][rid][1]) continue;
+    // Disable all moves for chosen piece
+    for (let i=0; i<posMoves.length; ++i) {
+      if (posMoves[i].from === key)
+        DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   DisableNoCaptureFromCheck(108);
@@ -656,10 +708,11 @@ function DisableMoves() {
   DisableCanMoveOnlyAttacked(105);
   DisableCanMoveOnlyAttackedNoCapture(112);
   // Now run checks that disable moves
-  DisablePawnsFirst(103);
+  DisablePawns(103);
   DisableCantCaptureStronger(106);
   DisablePawnsDoubleMove(107);
   DisableMoveIntoAttack(109);
+  DisableCantMoveIntoAttack(124);
   DisableRemoveAttack(110);
   DisableRemoveAttackNoCapture(111);
   DisableMustTake(113);
@@ -672,7 +725,9 @@ function DisableMoves() {
   DisableNoCaptureProtectedStronger(120);
   DisableCanTakeOnlyWeakest(121);
   DisableKingNoCaptureFromCheck(122);
-  DisableRandomPieces(123);
+  DisableRandomPieceTypes(123);
+  DisableRandomMoves(125);
+  DisableRandomPieces(126);
 }
 
 function ChooseRules() {
