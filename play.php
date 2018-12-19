@@ -66,7 +66,7 @@ echo "rpos[0][106] = 0;\n";
 echo "rpos[0][107] = 0;\n";
 echo "rpos[0][108] = 0;\n";
 echo "rpos[0][109] = 0;\n";
-echo "rpos[0][110] = 100;\n";
+echo "rpos[0][110] = 0;\n";
 echo "rpos[0][111] = 0;\n";
 echo "rpos[0][112] = 0;\n";
 echo "rpos[0][113] = 0;\n";
@@ -75,6 +75,11 @@ echo "rpos[0][115] = 0;\n";
 echo "rpos[0][116] = 0;\n";
 echo "rpos[0][117] = 0;\n";
 echo "rpos[0][118] = 0;\n";
+echo "rpos[0][119] = 0;\n";
+echo "rpos[0][120] = 0;\n";
+echo "rpos[0][121] = 0;\n";
+echo "rpos[0][122] = 0;\n";
+echo "rpos[0][123] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -98,6 +103,17 @@ echo "rpar[0][114][0] = 20;\n";
 echo "rpar[0][115][0] = 20;\n";
 echo "rpar[0][116][0] = 20;\n";
 echo "rpar[0][117][0] = 20;\n";
+echo "rpar[0][118][0] = 5;\n";
+echo "rpar[0][119][0] = 5;\n";
+echo "rpar[0][120][0] = 5;\n";
+echo "rpar[0][121][0] = 5;\n";
+echo "rpar[0][122][0] = 20;\n";
+echo "rpar[0][123][0] = 20;\n";
+echo "rpar[0][123][1] = 2;\n";
+
+//echo "rpos[1][106] = 100;\n";
+//echo "rpar[1][106][0] = 20;\n";
+
 ?>
 
 let color_to_pid = [];
@@ -383,6 +399,26 @@ function DisableMustTakeWeakest(rid) {
   ValidateRule(rid);
 }
 
+function DisableCanTakeOnlyWeakest(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  let min_pvalue = 10000;
+  // Get minimum pvalue
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece && pvalue[tpiece.type] < min_pvalue) min_pvalue = pvalue[tpiece.type];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking weakest
+    if (tpiece && pvalue[tpiece.type] !== min_pvalue)
+        DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMustTakeWithStrongest(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
@@ -480,6 +516,76 @@ function DisableNoCaptureFromCheck(rid) {
   ValidateRule(rid);
 }
 
+function DisableKingNoCaptureFromCheck(rid) {
+  if (!ract[rid]) return;
+  if (!game.in_check()) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking by king
+    if (tpiece && move.piece === 'k')
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNoFirstCapture(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (CapturesCount(pid) > 0) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNoCaptureUnprotected(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  for (let i = 0; i < posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if capturing unprotected (except king)
+    if (tpiece && move.piece !== 'k' &&
+      !game.attackedCnt(game.them(), move.to))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNoCaptureProtected(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  for (let i = 0; i < posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if capturing protected (except king)
+    if (tpiece && move.piece !== 'k' &&
+      game.attackedCnt(game.them(), move.to))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNoCaptureProtectedStronger(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  for (let i = 0; i < posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if capturing protected stronger (except king)
+    if (tpiece && move.piece !== 'k' && pvalue[move.piece] < pvalue[tpiece.type] &&
+      game.attackedCnt(game.them(), move.to))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoveIntoAttack(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
@@ -519,6 +625,29 @@ function DisableRemoveAttackNoCapture(rid) {
   ValidateRule(rid);
 }
 
+function DisableRandomPieces(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  // Choose pieces
+  let pal = [];
+  for (let i=0; i<rpar[pid][rid][1]; ++i) {
+    let rnd = Math.floor(Math.random() * 5);
+    if (rnd === 5) rnd = 4;
+    if (rnd === 0) pal['p'] = 1;
+    if (rnd === 1) pal['b'] = 1;
+    if (rnd === 2) pal['n'] = 1;
+    if (rnd === 3) pal['r'] = 1;
+    if (rnd === 4) pal['q'] = 1;
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    // Allow king and enabled
+    if (move.piece === 'k' || pal[move.piece] === 1) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   DisableNoCaptureFromCheck(108);
@@ -538,6 +667,12 @@ function DisableMoves() {
   DisableMustTakeWithStrongest(115);
   DisableMustTakeProtectedIfStronger(116);
   DisableCantCapture(117);
+  DisableNoFirstCapture(118);
+  DisableNoCaptureUnprotected(119);
+  DisableNoCaptureProtectedStronger(120);
+  DisableCanTakeOnlyWeakest(121);
+  DisableKingNoCaptureFromCheck(122);
+  DisableRandomPieces(123);
 }
 
 function ChooseRules() {
