@@ -24,6 +24,8 @@ echo "<p><span id=status></span></p>";
 echo "<p>PGN: <span id=pgn></span></p>";
 echo "<p><span id=brules></span></p>";
 echo "<p><span id=wrules></span></p>";
+echo "<p><span id=bcaptures></span></p>";
+echo "<p><span id=wcaptures></span></p>";
 echo "</table>";
 ?>
 
@@ -102,6 +104,11 @@ let color_to_pid = [];
 color_to_pid['b'] = 0;
 color_to_pid['w'] = 1;
 
+// Capture logs [pid][turn]
+let captures = [];
+captures[0] = [];
+captures[1] = [];
+
 // Piece values
 let pvalue = [];
 pvalue['p'] = 1;
@@ -117,6 +124,8 @@ let board,
   statusEl = $('#status'),
   brulesEl = $('#brules'),
   wrulesEl = $('#wrules'),
+  bcapturesEl = $('#bcaptures'),
+  wcapturesEl = $('#wcaptures'),
   fenEl = $('#fen'),
   pgnEl = $('#pgn'),
   // Player id
@@ -168,6 +177,27 @@ let onDragStart = function(source, piece, position, orientation) {
   }
 };
 
+function MakeMove(move) {
+  pid = color_to_pid[game.turn()];
+  let tpiece = game.get(move.to);
+  tnum = game.history().length;
+  if (tpiece) {
+    captures[pid][tnum] = tpiece.type;
+  }
+  let res = game.move(move);
+  return res;
+}
+
+function Undo() {
+  game.undo();
+  board.position(game.fen());
+  pid = color_to_pid[game.turn()];
+  tnum = game.history().length;
+  captures[pid][tnum] = null;
+  console.log(pid, tnum);
+  updateStatus();
+}
+
 let onDrop = function(source, target) {
   removeGreySquares();
   // Allow only pawns
@@ -185,7 +215,7 @@ let onDrop = function(source, target) {
   if (!found) return 'snapback';
 
   // see if the move is legal
-  let move = game.move({
+  let move = MakeMove({
     from: source,
     to: target,
     promotion: 'q' // NOTE: always promote to a queen for example simplicity
@@ -220,12 +250,6 @@ function countObjectsByKey(array, key, value) {
     }
   }
   return count;
-}
-
-function Undo() {
-  game.undo();
-  board.position(game.fen());
-  updateStatus();
 }
 
 function RevertRule() {
@@ -579,6 +603,8 @@ let updateStatus = function() {
   statusEl.html(status);
   fenEl.html(game.fen());
   pgnEl.html(game.pgn());
+  bcapturesEl.html(JSON.stringify(captures[0]));
+  wcapturesEl.html(JSON.stringify(captures[1]));
 };
 
 function RemoveDisabledMoves() {
@@ -599,7 +625,7 @@ function AutoMove(player_id) {
 
 function RandomMove() {
   let randomIndex = Math.floor(Math.random() * posMoves2.length);
-  game.move(posMoves2[randomIndex]);
+  MakeMove(posMoves2[randomIndex]);
   board.position(game.fen());
   removeGreySquares();
   updateStatus();
