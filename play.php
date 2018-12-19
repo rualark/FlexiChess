@@ -8,15 +8,23 @@ echo "<link rel=icon href='icons/king.ico'>";
 echo "<title>Play FlexiChess</title>\n";
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
+// TODO: Download jquery locally
 echo "<script src='https://code.jquery.com/jquery-1.12.4.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
-echo "<div id='board' style='width: 700px'></div>\n";
+echo "<table>";
+echo "<tr>";
+echo "<td valign='top'>";
+echo "<div id='board' style='width: 600px'></div>\n";
+echo "<td valign='top'>";
+echo "<button onclick=\"Undo();\">Undo</button>\n";
+echo "<button onclick=\"RandomMove();\">Random</button>\n";
 echo "<p><span id=status></span></p>";
 //echo "<p>FEN: <span id=fen></span></p>";
 echo "<p>PGN: <span id=pgn></span></p>";
 echo "<p><span id=brules></span></p>";
 echo "<p><span id=wrules></span></p>";
+echo "</table>";
 ?>
 
 <script>
@@ -42,14 +50,24 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 }
 
 echo "rpos[0][101] = 0;\n";
-echo "rpos[0][102] = 100;\n";
-echo "rpos[0][103] = 100;\n";
-echo "rpos[0][104] = 100;\n";
-echo "rpos[0][105] = 100;\n";
-echo "rpos[0][106] = 100;\n";
-echo "rpos[0][107] = 100;\n";
+echo "rpos[0][102] = 0;\n";
+echo "rpos[0][103] = 0;\n";
+echo "rpos[0][104] = 0;\n";
+echo "rpos[0][105] = 0;\n";
+echo "rpos[0][106] = 0;\n";
+echo "rpos[0][107] = 0;\n";
+echo "rpos[0][108] = 0;\n";
+echo "rpos[0][109] = 0;\n";
+echo "rpos[0][110] = 100;\n";
+echo "rpos[0][111] = 0;\n";
+echo "rpos[0][112] = 0;\n";
 
 echo "rpar[0][103] = 6;\n";
+echo "rpar[0][104] = 1;\n";
+echo "rpar[0][105] = 1;\n";
+echo "rpar[0][110] = 0;\n";
+echo "rpar[0][111] = 1;\n";
+echo "rpar[0][112] = 1;\n";
 ?>
 
 let color_to_pid = [];
@@ -176,6 +194,12 @@ function countObjectsByKey(array, key, value) {
   return count;
 }
 
+function Undo() {
+  game.undo();
+  board.position(game.fen());
+  updateStatus();
+}
+
 function RevertRule() {
   for (let i=0; i<posMoves.length; ++i) {
     if (posMoves[i].disabled === 1) posMoves[i].disabled = 0;
@@ -236,7 +260,7 @@ function DisableMustTakeIfStronger(rid) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     // Do not disable only if taking with stronger
-    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type]) continue;
+    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type] && move.piece !== 'k') continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -254,12 +278,12 @@ function DisableCantCaptureStronger(rid) {
   ValidateRule(rid);
 }
 
-function DisableCantMoveIfAttacked(rid) {
+function DisableCantMoveIfMultiAttacked(rid) {
   if (!ract[rid]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     // Skip not attacked squares that start moves
-    if (!game.attacked(game.them(), move.from)) continue;
+    if (game.attackedCnt(game.them(), move.from) <= rpar[pid][rid]) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -270,7 +294,69 @@ function DisableCanMoveOnlyAttacked(rid) {
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     // Skip attacked squares that start moves
-    if (game.attacked(game.them(), move.from)) continue;
+    if (game.attackedCnt(game.them(), move.from) > rpar[pid][rid]) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCanMoveOnlyAttackedNoCapture(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Skip attacked squares that start moves
+    if (game.attackedCnt(game.them(), move.from) > rpar[pid][rid] && !tpiece) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNoCaptureFromCheck(rid) {
+  if (!ract[rid]) return;
+  if (!game.in_check()) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMoveIntoAttack(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (game.attacked(game.them(), move.to)) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableRemoveAttack(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let acnt1 = game.attackedCnt(game.them(), move.from);
+    let acnt2 = posMoves[i].chess.attackedCnt(game.them(), move.to);
+    if (acnt1 > rpar[pid][rid] && acnt2 < acnt1) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+  console.log(rid, JSON.stringify(posMoves));
+}
+
+function DisableRemoveAttackNoCapture(rid) {
+  if (!ract[rid]) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    let acnt1 = game.attackedCnt(game.them(), move.from);
+    let acnt2 = posMoves[i].chess.attackedCnt(game.them(), move.to);
+    if (acnt1 > rpar[pid][rid] && acnt2 < acnt1
+        && !tpiece) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -278,13 +364,18 @@ function DisableCanMoveOnlyAttacked(rid) {
 
 function DisableMoves() {
   // First run checks that force moves
+  DisableNoCaptureFromCheck(108);
   DisableMustTakeIfStronger(102);
+  DisableCantMoveIfMultiAttacked(104);
   DisableCanMoveOnlyAttacked(105);
+  DisableCanMoveOnlyAttackedNoCapture(112);
   // Now run checks that disable moves
-  DisableCantMoveIfAttacked(104);
   DisablePawnsFirst(103);
   DisableCantCaptureStronger(106);
   DisablePawnsDoubleMove(107);
+  DisableMoveIntoAttack(109);
+  DisableRemoveAttack(110);
+  DisableRemoveAttackNoCapture(111);
 }
 
 function ChooseRules() {
@@ -302,10 +393,12 @@ function ShowRules() {
   let rst0 = '';
   rpos[pid].forEach(function(pos, rid, arr) {
     if (pos === 0) return;
-    if (ract[rid] === 3) rst3 += rname[rid] + '<br>';
-    else if (ract[rid] === 2) rst2 += rname[rid] + '<br>';
-    else if (ract[rid] === 1) rst1 += rname[rid] + '<br>';
-    else rst0 += rname[rid] + '<br>';
+    let st = rname[rid];
+    st = st.replace(/XX/g, rpar[pid][rid]);
+    if (ract[rid] === 3) rst3 += st + '<br>';
+    else if (ract[rid] === 2) rst2 += st + '<br>';
+    else if (ract[rid] === 1) rst1 += st + '<br>';
+    else rst0 += st + '<br>';
   });
   hst =
     "<font color=red>" + rst2 + "</font>" +
@@ -346,14 +439,18 @@ let updateStatus = function() {
       verbose: true
     });
     pid = color_to_pid[game.turn()];
-    for (let i=0; i<posMoves.length; ++i) posMoves[i].disabled = 0;
+    for (let i=0; i<posMoves.length; ++i) {
+      posMoves[i].disabled = 0;
+      posMoves[i].chess = new Chess(game.fen());
+      posMoves[i].chess.move(posMoves[i]);
+      console.log(posMoves[i].chess.fen());
+    }
     ChooseRules();
     DisableMoves();
     RemoveDisabledMoves();
     ShowRules();
     HighlightPosMoves();
     window.setTimeout(AutoMove, 500);
-    //AutoMove();
   }
 
   statusEl.html(status);
@@ -372,12 +469,16 @@ function RemoveDisabledMoves() {
 
 function AutoMove() {
   if (countObjectsByKey(posMoves2, 'disabled', 0) === 1 || ract[101]) {
-    let randomIndex = Math.floor(Math.random() * posMoves2.length);
-    game.move(posMoves2[randomIndex]);
-    board.position(game.fen());
-    removeGreySquares();
-    updateStatus();
+    RandomMove();
   }
+}
+
+function RandomMove() {
+  let randomIndex = Math.floor(Math.random() * posMoves2.length);
+  game.move(posMoves2[randomIndex]);
+  board.position(game.fen());
+  removeGreySquares();
+  updateStatus();
 }
 
 // Highlight possible moves
