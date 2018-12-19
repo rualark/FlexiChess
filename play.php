@@ -64,14 +64,14 @@ echo "rpos[0][106] = 0;\n";
 echo "rpos[0][107] = 0;\n";
 echo "rpos[0][108] = 0;\n";
 echo "rpos[0][109] = 0;\n";
-echo "rpos[0][110] = 0;\n";
+echo "rpos[0][110] = 100;\n";
 echo "rpos[0][111] = 0;\n";
 echo "rpos[0][112] = 0;\n";
 echo "rpos[0][113] = 0;\n";
 echo "rpos[0][114] = 0;\n";
 echo "rpos[0][115] = 0;\n";
 echo "rpos[0][116] = 0;\n";
-echo "rpos[0][117] = 100;\n";
+echo "rpos[0][117] = 0;\n";
 echo "rpos[0][118] = 0;\n";
 
 echo "rpar[0][101][0] = 20;\n";
@@ -462,7 +462,6 @@ function DisableRemoveAttack(rid) {
     DisableMove(i);
   }
   ValidateRule(rid);
-  console.log(rid, JSON.stringify(posMoves));
 }
 
 function DisableRemoveAttackNoCapture(rid) {
@@ -484,7 +483,7 @@ function DisableMoves() {
   // First run checks that force moves
   DisableNoCaptureFromCheck(108);
   DisableMustTakeIfStronger(102);
-  DisableCantMoveIfMultiAttacked(104);
+  DisableCantMoveIfAttacked(104);
   DisableCanMoveOnlyAttacked(105);
   DisableCanMoveOnlyAttackedNoCapture(112);
   // Now run checks that disable moves
@@ -568,7 +567,6 @@ let updateStatus = function() {
       posMoves[i].disabled = 0;
       posMoves[i].chess = new Chess(game.fen());
       posMoves[i].chess.move(posMoves[i]);
-      console.log(posMoves[i].chess.fen());
     }
     ChooseRules();
     DisableMoves();
