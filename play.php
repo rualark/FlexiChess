@@ -58,16 +58,33 @@ echo "rpos[0][106] = 0;\n";
 echo "rpos[0][107] = 0;\n";
 echo "rpos[0][108] = 0;\n";
 echo "rpos[0][109] = 0;\n";
-echo "rpos[0][110] = 100;\n";
+echo "rpos[0][110] = 0;\n";
 echo "rpos[0][111] = 0;\n";
 echo "rpos[0][112] = 0;\n";
+echo "rpos[0][113] = 0;\n";
+echo "rpos[0][114] = 0;\n";
+echo "rpos[0][115] = 0;\n";
+echo "rpos[0][116] = 0;\n";
+echo "rpos[0][117] = 0;\n";
+echo "rpos[0][118] = 0;\n";
 
+echo "rpar[0][101] = 20;\n";
+echo "rpar[0][102] = 20;\n";
 echo "rpar[0][103] = 6;\n";
 echo "rpar[0][104] = 1;\n";
 echo "rpar[0][105] = 1;\n";
+echo "rpar[0][106] = 20;\n";
+echo "rpar[0][107] = 20;\n";
+echo "rpar[0][108] = 20;\n";
+echo "rpar[0][109] = 20;\n";
 echo "rpar[0][110] = 0;\n";
 echo "rpar[0][111] = 1;\n";
 echo "rpar[0][112] = 1;\n";
+echo "rpar[0][113] = 20;\n";
+echo "rpar[0][114] = 20;\n";
+echo "rpar[0][115] = 20;\n";
+echo "rpar[0][116] = 20;\n";
+echo "rpar[0][117] = 20;\n";
 ?>
 
 let color_to_pid = [];
@@ -233,7 +250,7 @@ function DisableMove(i) {
 
 function DisablePawnsFirst(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][103] * 2) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.piece !== 'p') {
@@ -245,6 +262,7 @@ function DisablePawnsFirst(rid) {
 
 function DisablePawnsDoubleMove(rid) {
   if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.flags === 'b') {
@@ -256,6 +274,7 @@ function DisablePawnsDoubleMove(rid) {
 
 function DisableMustTakeIfStronger(rid) {
   if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -266,13 +285,94 @@ function DisableMustTakeIfStronger(rid) {
   ValidateRule(rid);
 }
 
+function DisableMustTakeProtectedIfStronger(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking with stronger
+    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type] && move.piece !== 'k'
+        && game.attackedCnt(game.them(), move.to)) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTake(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking
+    if (tpiece) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeWeakest(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
+  let min_pvalue = 10000;
+  // Get minimum pvalue
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece && pvalue[tpiece.type] < min_pvalue) min_pvalue = pvalue[tpiece.type];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking weakest
+    if (tpiece && pvalue[tpiece.type] === min_pvalue) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeWithStrongest(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
+  let max_pvalue = 0;
+  // Get minimum pvalue
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece && pvalue[move.piece] > max_pvalue) max_pvalue = pvalue[move.piece];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking with strongest
+    if (tpiece && pvalue[move.piece] === max_pvalue) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableCantCaptureStronger(rid) {
   if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     // Disable if taking a stronger
     if (tpiece && pvalue[move.piece] < pvalue[tpiece.type])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCapture(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece)
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -315,6 +415,7 @@ function DisableCanMoveOnlyAttackedNoCapture(rid) {
 function DisableNoCaptureFromCheck(rid) {
   if (!ract[rid]) return;
   if (!game.in_check()) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -327,6 +428,7 @@ function DisableNoCaptureFromCheck(rid) {
 
 function DisableMoveIntoAttack(rid) {
   if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (game.attacked(game.them(), move.to)) continue;
@@ -376,6 +478,11 @@ function DisableMoves() {
   DisableMoveIntoAttack(109);
   DisableRemoveAttack(110);
   DisableRemoveAttackNoCapture(111);
+  DisableMustTake(113);
+  DisableMustTakeWeakest(114);
+  DisableMustTakeWithStrongest(115);
+  DisableMustTakeProtectedIfStronger(116);
+  DisableCantCapture(117);
 }
 
 function ChooseRules() {
@@ -450,7 +557,7 @@ let updateStatus = function() {
     RemoveDisabledMoves();
     ShowRules();
     HighlightPosMoves();
-    window.setTimeout(AutoMove, 500);
+    window.setTimeout(AutoMove(pid), 500);
   }
 
   statusEl.html(status);
@@ -467,8 +574,9 @@ function RemoveDisabledMoves() {
   }
 }
 
-function AutoMove() {
-  if (countObjectsByKey(posMoves2, 'disabled', 0) === 1 || ract[101]) {
+function AutoMove(player_id) {
+  if (countObjectsByKey(posMoves2, 'disabled', 0) === 1 ||
+    (ract[101] && game.history().length > rpar[player_id][101] * 2)) {
     RandomMove();
   }
 }
