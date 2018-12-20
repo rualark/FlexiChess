@@ -88,7 +88,9 @@ echo "rpos[0][128] = 0;\n";
 echo "rpos[0][129] = 0;\n";
 echo "rpos[0][130] = 0;\n";
 echo "rpos[0][131] = 0;\n";
-echo "rpos[0][132] = 100;\n";
+echo "rpos[0][132] = 0;\n";
+echo "rpos[0][133] = 0;\n";
+echo "rpos[0][134] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -135,6 +137,10 @@ echo "rpar[0][131][0] = 20;\n";
 echo "rpar[0][131][1] = 3;\n";
 echo "rpar[0][132][0] = 20;\n";
 echo "rpar[0][132][1] = 3;\n";
+echo "rpar[0][133][0] = 20;\n";
+echo "rpar[0][133][1] = 3;\n";
+echo "rpar[0][134][0] = 20;\n";
+echo "rpar[0][134][1] = 3;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -567,8 +573,10 @@ function DisableCantMultiCaptureType(rid) {
       // Check if all previous moves were captures with same type
       let found = 1;
       for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
-        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
+        if (hist[hist.length - 2 - i * 2].captured == null ||
+          hist[hist.length - 2 - i * 2].piece !== move.piece) {
           found = 0;
+          break;
         }
       }
       if (found) DisableMove(i);
@@ -581,20 +589,51 @@ function DisableCantMultiCaptureSame(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[pid][rid][0] * 2) return;
   if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  // Check if all previous moves were captures
+  for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+    if (hist[hist.length - 2 - i * 2].captured == null) return;
+  }
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     // Disable if taking again
     if (tpiece) {
-      // Check if all previous moves were captures with same type
       let found = 1;
-      for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
-        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
+      // Check first previous move
+      if (move.from !== hist[hist.length - 2].to) continue;
+      // Check if all previous moves form chain
+      for (let i=1; i<rpar[pid][rid][1] - 1 ; ++i) {
+        if (hist[hist.length - 2 - i * 2].to !== hist[hist.length - i * 2].from) {
           found = 0;
+          break;
         }
       }
       if (found) DisableMove(i);
     }
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiMoveSame(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    let found = 1;
+    // Check first previous move
+    console.log("Check 1");
+    if (move.from !== hist[hist.length - 2].to) continue;
+    // Check if all previous moves form chain
+    for (let i=1; i<rpar[pid][rid][1] - 1 ; ++i) {
+      console.log("Check 2");
+      if (hist[hist.length - 2 - i * 2].to !== hist[hist.length - i * 2].from) {
+        found = 0;
+        break;
+      }
+    }
+    if (found) DisableMove(i);
   }
   ValidateRule(rid);
 }
@@ -611,8 +650,10 @@ function DisableCantMultiCaptureTypeStronger(rid) {
       // Check if all previous moves were captures with same type
       let found = 1;
       for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
-        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
+        if (hist[hist.length - 2 - i * 2].captured == null ||
+          hist[hist.length - 2 - i * 2].piece !== move.piece) {
           found = 0;
+          break;
         }
       }
       if (found) DisableMove(i);
@@ -893,6 +934,8 @@ function DisableMoves() {
   DisableCantMultiCaptureType(130);
   DisableCantMultiCaptureStronger(131);
   DisableCantMultiCaptureTypeStronger(132);
+  DisableCantMultiCaptureSame(133);
+  DisableCantMultiMoveSame(134);
 }
 
 function ChooseRules() {
@@ -914,9 +957,18 @@ function ShowRules() {
     st = st.replace(/XX/g, rpar[pid][rid][0]);
     st = st.replace(/YY/g, rpar[pid][rid][1]);
     st = st.replace(/ZZ/g, rpar[pid][rid][2]);
-    if (ract[rid] === 3) rst3 += st + '<br>';
-    else if (ract[rid] === 2) rst2 += st + '<br>';
-    else if (ract[rid] === 1) rst1 += st + '<br>';
+    let st2 = rdesc[rid];
+    st2 = st2.replace(/XX/g, rpar[pid][rid][0]);
+    st2 = st2.replace(/YY/g, rpar[pid][rid][1]);
+    st2 = st2.replace(/ZZ/g, rpar[pid][rid][2]);
+    if (ract[rid] === 3) st2 += "\nThis rule tried to limit moves, but it disabled all possible moves";
+    else if (ract[rid] === 2) st2 += "\nThis rule limits current moves";
+    else if (ract[rid] === 1) st2 += "\nThis rule does not currently limit moves";
+    else st2 += "\nThis rule is not active due to low possibility";
+    fst = '<span title="' + st2 + '">- ' + st + '</span><br>';
+    if (ract[rid] === 3) rst3 += fst;
+    else if (ract[rid] === 2) rst2 += fst;
+    else if (ract[rid] === 1) rst1 += fst;
     else rst0 += st + '<br>';
   });
   hst =
@@ -961,7 +1013,6 @@ let updateStatus = function() {
     pid2 = color_to_pid[game.them()];
     hist = game.history({verbose: true});
     tnum = hist.length;
-    //console.log(hist);
     if (hist.length > 1) {
       prelast_cap = hist[hist.length - 2].captured;
     }
