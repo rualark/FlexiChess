@@ -31,6 +31,8 @@ echo "</table>";
 
 <script>
 
+let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
+
 let MAX_RULES = 300;
 let rname = []; // Rule names
 let rdesc = []; // Rule descriptions
@@ -95,7 +97,12 @@ echo "rpos[0][135] = 0;\n";
 echo "rpos[0][136] = 0;\n";
 echo "rpos[0][137] = 0;\n";
 echo "rpos[0][138] = 0;\n";
-echo "rpos[0][139] = 100;\n";
+echo "rpos[0][139] = 0;\n";
+echo "rpos[0][140] = 0;\n";
+echo "rpos[0][141] = 0;\n";
+echo "rpos[0][142] = 0;\n";
+echo "rpos[0][143] = 100;\n";
+echo "rpos[0][144] = 0;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -152,6 +159,11 @@ echo "rpar[0][136][0] = 20;\n";
 echo "rpar[0][137][0] = 20;\n";
 echo "rpar[0][138][0] = 20;\n";
 echo "rpar[0][139][0] = 20;\n";
+echo "rpar[0][140][0] = 20;\n";
+echo "rpar[0][141][1] = 6;\n";
+echo "rpar[0][142][1] = 3;\n";
+echo "rpar[0][143][1] = 3;\n";
+echo "rpar[0][144][1] = 3;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -545,6 +557,19 @@ function DisableCantCaptureStrongerAfterYourCapture(rid) {
     let tpiece = game.get(move.to);
     // Disable if taking
     if (tpiece && pvalue[move.piece] < pvalue[tpiece.type])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCaptureOnlyAfterCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece && !last_cap)
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -988,6 +1013,99 @@ function DisableRandomPieces(rid) {
   ValidateRule(rid);
 }
 
+function DisableNeedMovesEachPieceType(rid) {
+  if (!ract[rid]) return;
+  if (hist.length < rpar[pid][rid][1] * 2) return;
+  // Check moves for each piece type
+  let ptneed = [];
+  for (let pt_id in ptypes) {
+    let found = 0;
+    for (let i=0; i<rpar[pid][rid][1]; ++i) {
+      console.log(i, hist[hist.length - 2 - i * 2].piece, pt_id, ptypes[pt_id], ptneed.length);
+      if (hist[hist.length - 2 - i * 2].piece === ptypes[pt_id]) {
+        found = 1;
+        break;
+      }
+    }
+    if (found) continue;
+    ptneed.push(ptypes[pt_id]);
+  }
+  console.log(ptneed, ptneed.length);
+  // No needed piece types
+  if (!ptneed.length) return;
+  // Disable all moves except needed
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let found = 0;
+    for (let pt_id in ptneed) {
+      console.log(move.piece, ptneed[pt_id]);
+      if (move.piece === ptneed[pt_id]) found = 1;
+    }
+    if (!found) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNeedKingMoves(rid) {
+  if (!ract[rid]) return;
+  if (hist.length < rpar[pid][rid][1] * 2) return;
+  let ptype = 'k';
+  let found = 0;
+  for (let i=0; i<rpar[pid][rid][1]; ++i) {
+    if (hist[hist.length - 2 - i * 2].piece === ptype) {
+      found = 1;
+      break;
+    }
+  }
+  if (found) return;
+  // Disable all moves except needed
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.piece !== ptype) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNeedPawnMoves(rid) {
+  if (!ract[rid]) return;
+  if (hist.length < rpar[pid][rid][1] * 2) return;
+  let ptype = 'p';
+  let found = 0;
+  for (let i=0; i<rpar[pid][rid][1]; ++i) {
+    if (hist[hist.length - 2 - i * 2].piece === ptype) {
+      found = 1;
+      break;
+    }
+  }
+  if (found) return;
+  // Disable all moves except needed
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.piece !== ptype) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNeedQueenMoves(rid) {
+  if (!ract[rid]) return;
+  if (hist.length < rpar[pid][rid][1] * 2) return;
+  let ptype = 'q';
+  let found = 0;
+  for (let i=0; i<rpar[pid][rid][1]; ++i) {
+    if (hist[hist.length - 2 - i * 2].piece === ptype) {
+      found = 1;
+      break;
+    }
+  }
+  if (found) return;
+  // Disable all moves except needed
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.piece !== ptype) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
@@ -1029,6 +1147,11 @@ function DisableMoves() {
   DisableCantCaptureCapturerStronger(137);
   DisableCantCaptureAfterYourCapture(138);
   DisableCantCaptureStrongerAfterYourCapture(139);
+  DisableCaptureOnlyAfterCapture(140);
+  DisableNeedMovesEachPieceType(141);
+  DisableNeedKingMoves(142);
+  DisableNeedPawnMoves(143);
+  DisableNeedQueenMoves(144);
 }
 
 function ChooseRules() {
