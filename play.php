@@ -90,7 +90,12 @@ echo "rpos[0][130] = 0;\n";
 echo "rpos[0][131] = 0;\n";
 echo "rpos[0][132] = 0;\n";
 echo "rpos[0][133] = 0;\n";
-echo "rpos[0][134] = 100;\n";
+echo "rpos[0][134] = 0;\n";
+echo "rpos[0][135] = 0;\n";
+echo "rpos[0][136] = 0;\n";
+echo "rpos[0][137] = 0;\n";
+echo "rpos[0][138] = 0;\n";
+echo "rpos[0][139] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -141,6 +146,12 @@ echo "rpar[0][133][0] = 20;\n";
 echo "rpar[0][133][1] = 3;\n";
 echo "rpar[0][134][0] = 20;\n";
 echo "rpar[0][134][1] = 3;\n";
+echo "rpar[0][135][0] = 20;\n";
+echo "rpar[0][135][1] = 3;\n";
+echo "rpar[0][136][0] = 20;\n";
+echo "rpar[0][137][0] = 20;\n";
+echo "rpar[0][138][0] = 20;\n";
+echo "rpar[0][139][0] = 20;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -497,6 +508,63 @@ function DisableCantCaptureStrongerWithCaptured(rid) {
   ValidateRule(rid);
 }
 
+function DisableCantCaptureCapturer(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking capturer
+    if (tpiece && hist[hist.length - 1].to === move.to)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureAfterYourCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureStrongerAfterYourCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureCapturerStronger(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking capturer
+    if (tpiece && hist[hist.length - 1].to === move.to &&
+      pvalue[move.piece] < pvalue[tpiece.type])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableCantCaptureWithCaptured(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[pid][rid][0] * 2) return;
@@ -581,6 +649,26 @@ function DisableCantMultiCaptureType(rid) {
       }
       if (found) DisableMove(i);
     }
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiMoveType(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Check if all previous moves were moves with same type
+    let found = 1;
+    for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+      if (hist[hist.length - 2 - i * 2].piece !== move.piece) {
+        found = 0;
+        break;
+      }
+    }
+    if (found) DisableMove(i);
   }
   ValidateRule(rid);
 }
@@ -936,6 +1024,11 @@ function DisableMoves() {
   DisableCantMultiCaptureTypeStronger(132);
   DisableCantMultiCaptureSame(133);
   DisableCantMultiMoveSame(134);
+  DisableCantMultiMoveType(135);
+  DisableCantCaptureCapturer(136);
+  DisableCantCaptureCapturerStronger(137);
+  DisableCantCaptureAfterYourCapture(138);
+  DisableCantCaptureStrongerAfterYourCapture(139);
 }
 
 function ChooseRules() {
