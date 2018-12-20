@@ -82,7 +82,11 @@ echo "rpos[0][122] = 0;\n";
 echo "rpos[0][123] = 0;\n";
 echo "rpos[0][124] = 0;\n";
 echo "rpos[0][125] = 0;\n";
-echo "rpos[0][126] = 100;\n";
+echo "rpos[0][126] = 0;\n";
+echo "rpos[0][127] = 0;\n";
+echo "rpos[0][128] = 0;\n";
+echo "rpos[0][129] = 0;\n";
+echo "rpos[0][130] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -119,6 +123,12 @@ echo "rpar[0][125][0] = 20;\n";
 echo "rpar[0][125][1] = 20;\n";
 echo "rpar[0][126][0] = 20;\n";
 echo "rpar[0][126][1] = 20;\n";
+echo "rpar[0][127][0] = 20;\n";
+echo "rpar[0][128][0] = 20;\n";
+echo "rpar[0][129][0] = 20;\n";
+echo "rpar[0][129][1] = 3;\n";
+echo "rpar[0][130][0] = 20;\n";
+echo "rpar[0][130][1] = 3;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -128,11 +138,6 @@ echo "rpar[0][126][1] = 20;\n";
 let color_to_pid = [];
 color_to_pid['b'] = 0;
 color_to_pid['w'] = 1;
-
-// Capture logs [pid][turn]
-let captures = [];
-captures[0] = [];
-captures[1] = [];
 
 // Piece values
 let pvalue = [];
@@ -153,8 +158,17 @@ let board,
   wcapturesEl = $('#wcaptures'),
   fenEl = $('#fen'),
   pgnEl = $('#pgn'),
-  // Player id
-  pid;
+  // Current Player id
+  pid,
+  // Other Player id
+  pid2,
+  // Current turn number in history
+  tnum,
+  // Last captured piece in history
+  last_cap,
+  // Last captured piece in history
+  prelast_cap
+;
 
 // Possible moves
 let posMoves, posMoves2, ract;
@@ -203,28 +217,24 @@ let onDragStart = function(source, piece, position, orientation) {
 };
 
 function MakeMove(move) {
-  pid = color_to_pid[game.turn()];
-  let tpiece = game.get(move.to);
-  tnum = game.history().length;
-  if (tpiece) {
-    captures[pid][tnum] = tpiece.type;
-  }
   return game.move(move);
 }
 
-function CapturesCount(player_id) {
+function CapturesCount(color) {
   let cnt = 0;
-  for (let i=0; i<captures[player_id].length; ++i) {
-    if (captures[player_id][i] != null) ++cnt;
+  let hist = game.history({ verbose: true });
+  for (let i=0; i<hist.length; ++i) {
+    if (hist[i].color === color && hist[i].captured != null) ++cnt;
   }
   return cnt;
 }
 
-function CapturesValue(player_id) {
+function CapturesValue(color) {
   let val = 0;
-  for (let i=0; i<captures[player_id].length; ++i) {
-    if (captures[player_id][i] != null)
-      val += pvalue[captures[player_id][i]];
+  let hist = game.history({ verbose: true });
+  for (let i=0; i<hist.length; ++i) {
+    if (hist[i].color === color && hist[i].captured != null)
+      val += pvalue[hist[i].captured]
   }
   return val;
 }
@@ -232,10 +242,6 @@ function CapturesValue(player_id) {
 function Undo() {
   game.undo();
   board.position(game.fen());
-  pid = color_to_pid[game.turn()];
-  tnum = game.history().length;
-  captures[pid][tnum] = null;
-  console.log(pid, tnum);
   updateStatus();
 }
 
@@ -327,7 +333,7 @@ function DisableMove(i) {
 function DisablePawns(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
-  if (CapturesValue(color_to_pid[game.them()]) >= rpar[pid][rid][1]) return;
+  if (CapturesValue(game.them()) >= rpar[pid][rid][1]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.piece !== 'p') {
@@ -462,6 +468,91 @@ function DisableCantCaptureStronger(rid) {
   ValidateRule(rid);
 }
 
+function DisableCantCaptureStrongerWithCaptured(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking a stronger by captured
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type] &&
+      last_cap === move.piece)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureWithCaptured(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking by captured
+    if (tpiece &&
+      last_cap === move.piece)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantCaptureCapturerType(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (!last_cap) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking by captured
+    if (tpiece &&
+      last_cap === tpiece.type)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiCapture(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (game.history().length < (rpar[pid][rid][1] - 1) * 2) return;
+  // Check if all previous moves were captures
+  for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+    if (game.history({ verbose: true })[game.history().length - 2 - i * 2].captured == null) return;
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking again
+    if (tpiece) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiCaptureType(rid) {
+  if (!ract[rid]) return;
+  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (game.history().length < (rpar[pid][rid][1] - 1) * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking again
+    if (tpiece) {
+      // Check if all previous moves were captures with same type
+      let found = 1;
+      for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+        if (game.history({ verbose: true })
+          [game.history().length - 2 - i * 2].captured !== move.piece) {
+          found = 0;
+        }
+      }
+      if (found) DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
 function DisableCantCapture(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
@@ -543,7 +634,7 @@ function DisableKingNoCaptureFromCheck(rid) {
 function DisableNoFirstCapture(rid) {
   if (!ract[rid]) return;
   if (game.history().length > rpar[pid][rid][0] * 2) return;
-  if (CapturesCount(color_to_pid[game.them()]) > 0) return;
+  if (CapturesCount(game.them()) > 0) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -702,12 +793,12 @@ function DisableRandomPieces(rid) {
 
 function DisableMoves() {
   // First run checks that force moves
+  // Then run checks that disable moves
   DisableNoCaptureFromCheck(108);
   DisableMustTakeIfStronger(102);
   DisableCantMoveIfAttacked(104);
   DisableCanMoveOnlyAttacked(105);
   DisableCanMoveOnlyAttackedNoCapture(112);
-  // Now run checks that disable moves
   DisablePawns(103);
   DisableCantCaptureStronger(106);
   DisablePawnsDoubleMove(107);
@@ -728,6 +819,10 @@ function DisableMoves() {
   DisableRandomPieceTypes(123);
   DisableRandomMoves(125);
   DisableRandomPieces(126);
+  DisableCantCaptureWithCaptured(127);
+  DisableCantCaptureStrongerWithCaptured(128);
+  DisableCantMultiCapture(129);
+  DisableCantMultiCaptureType(130);
 }
 
 function ChooseRules() {
@@ -793,6 +888,17 @@ let updateStatus = function() {
       verbose: true
     });
     pid = color_to_pid[game.turn()];
+    pid2 = color_to_pid[game.them()];
+    tnum = game.history().length;
+    //console.log(game.history());
+    if (game.history().length > 1) {
+      prelast_cap = game.history({verbose: true})[game.history().length - 2].captured;
+    }
+    else prelast_cap = '';
+    if (game.history().length > 0) {
+      last_cap = game.history({verbose: true})[game.history().length - 1].captured;
+    }
+    else last_cap = '';
     for (let i=0; i<posMoves.length; ++i) {
       posMoves[i].disabled = 0;
       posMoves[i].chess = new Chess(game.fen());
@@ -809,8 +915,8 @@ let updateStatus = function() {
   statusEl.html(status);
   fenEl.html(game.fen());
   pgnEl.html(game.pgn());
-  bcapturesEl.html("Black captures balance: " + (CapturesValue(0) - CapturesValue(1)));
-  wcapturesEl.html("White captures balance: " + (CapturesValue(1) - CapturesValue(0)));
+  bcapturesEl.html("Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
+  wcapturesEl.html("White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
 };
 
 function RemoveDisabledMoves() {
