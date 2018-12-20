@@ -86,7 +86,9 @@ echo "rpos[0][126] = 0;\n";
 echo "rpos[0][127] = 0;\n";
 echo "rpos[0][128] = 0;\n";
 echo "rpos[0][129] = 0;\n";
-echo "rpos[0][130] = 100;\n";
+echo "rpos[0][130] = 0;\n";
+echo "rpos[0][131] = 0;\n";
+echo "rpos[0][132] = 100;\n";
 
 echo "rpar[0][101][0] = 20;\n";
 echo "rpar[0][102][0] = 20;\n";
@@ -129,6 +131,10 @@ echo "rpar[0][129][0] = 20;\n";
 echo "rpar[0][129][1] = 3;\n";
 echo "rpar[0][130][0] = 20;\n";
 echo "rpar[0][130][1] = 3;\n";
+echo "rpar[0][131][0] = 20;\n";
+echo "rpar[0][131][1] = 3;\n";
+echo "rpar[0][132][0] = 20;\n";
+echo "rpar[0][132][1] = 3;\n";
 
 //echo "rpos[1][106] = 100;\n";
 //echo "rpar[1][106][0] = 20;\n";
@@ -167,7 +173,9 @@ let board,
   // Last captured piece in history
   last_cap,
   // Last captured piece in history
-  prelast_cap
+  prelast_cap,
+  // History of moves
+  hist
 ;
 
 // Possible moves
@@ -332,7 +340,7 @@ function DisableMove(i) {
 
 function DisablePawns(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   if (CapturesValue(game.them()) >= rpar[pid][rid][1]) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -345,7 +353,7 @@ function DisablePawns(rid) {
 
 function DisablePawnsDoubleMove(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.flags === 'b') {
@@ -357,7 +365,7 @@ function DisablePawnsDoubleMove(rid) {
 
 function DisableMustTakeIfStronger(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -370,7 +378,7 @@ function DisableMustTakeIfStronger(rid) {
 
 function DisableMustTakeProtectedIfStronger(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -384,7 +392,7 @@ function DisableMustTakeProtectedIfStronger(rid) {
 
 function DisableMustTake(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -397,7 +405,7 @@ function DisableMustTake(rid) {
 
 function DisableMustTakeWeakest(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   let min_pvalue = 10000;
   // Get minimum pvalue
   for (let i=0; i<posMoves.length; ++i) {
@@ -417,7 +425,7 @@ function DisableMustTakeWeakest(rid) {
 
 function DisableCanTakeOnlyWeakest(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   let min_pvalue = 10000;
   // Get minimum pvalue
   for (let i=0; i<posMoves.length; ++i) {
@@ -437,7 +445,7 @@ function DisableCanTakeOnlyWeakest(rid) {
 
 function DisableMustTakeWithStrongest(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   let max_pvalue = 0;
   // Get minimum pvalue
   for (let i=0; i<posMoves.length; ++i) {
@@ -457,7 +465,7 @@ function DisableMustTakeWithStrongest(rid) {
 
 function DisableCantCaptureStronger(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -470,7 +478,7 @@ function DisableCantCaptureStronger(rid) {
 
 function DisableCantCaptureStrongerWithCaptured(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   if (!last_cap) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -485,7 +493,7 @@ function DisableCantCaptureStrongerWithCaptured(rid) {
 
 function DisableCantCaptureWithCaptured(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   if (!last_cap) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -500,7 +508,7 @@ function DisableCantCaptureWithCaptured(rid) {
 
 function DisableCantCaptureCapturerType(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   if (!last_cap) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -515,11 +523,11 @@ function DisableCantCaptureCapturerType(rid) {
 
 function DisableCantMultiCapture(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
-  if (game.history().length < (rpar[pid][rid][1] - 1) * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
   // Check if all previous moves were captures
   for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
-    if (game.history({ verbose: true })[game.history().length - 2 - i * 2].captured == null) return;
+    if (hist[hist.length - 2 - i * 2].captured == null) return;
   }
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -530,10 +538,27 @@ function DisableCantMultiCapture(rid) {
   ValidateRule(rid);
 }
 
+function DisableCantMultiCaptureStronger(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  // Check if all previous moves were captures
+  for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+    if (hist[hist.length - 2 - i * 2].captured == null) return;
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking again
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type]) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableCantMultiCaptureType(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
-  if (game.history().length < (rpar[pid][rid][1] - 1) * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -542,8 +567,51 @@ function DisableCantMultiCaptureType(rid) {
       // Check if all previous moves were captures with same type
       let found = 1;
       for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
-        if (game.history({ verbose: true })
-          [game.history().length - 2 - i * 2].captured !== move.piece) {
+        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
+          found = 0;
+        }
+      }
+      if (found) DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiCaptureSame(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking again
+    if (tpiece) {
+      // Check if all previous moves were captures with same type
+      let found = 1;
+      for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
+          found = 0;
+        }
+      }
+      if (found) DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMultiCaptureTypeStronger(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  if (hist.length < (rpar[pid][rid][1] - 1) * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking again
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type]) {
+      // Check if all previous moves were captures with same type
+      let found = 1;
+      for (let i=0; i<rpar[pid][rid][1] - 1 ; ++i) {
+        if (hist[hist.length - 2 - i * 2].captured !== move.piece) {
           found = 0;
         }
       }
@@ -555,7 +623,7 @@ function DisableCantMultiCaptureType(rid) {
 
 function DisableCantCapture(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -568,7 +636,7 @@ function DisableCantCapture(rid) {
 
 function DisableCantMoveIfAttacked(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     // Skip not attacked squares that start moves
@@ -580,7 +648,7 @@ function DisableCantMoveIfAttacked(rid) {
 
 function DisableCanMoveOnlyAttacked(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     // Skip attacked squares that start moves
@@ -592,7 +660,7 @@ function DisableCanMoveOnlyAttacked(rid) {
 
 function DisableCanMoveOnlyAttackedNoCapture(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -606,7 +674,7 @@ function DisableCanMoveOnlyAttackedNoCapture(rid) {
 function DisableNoCaptureFromCheck(rid) {
   if (!ract[rid]) return;
   if (!game.in_check()) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -620,7 +688,7 @@ function DisableNoCaptureFromCheck(rid) {
 function DisableKingNoCaptureFromCheck(rid) {
   if (!ract[rid]) return;
   if (!game.in_check()) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -633,7 +701,7 @@ function DisableKingNoCaptureFromCheck(rid) {
 
 function DisableNoFirstCapture(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   if (CapturesCount(game.them()) > 0) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -647,7 +715,7 @@ function DisableNoFirstCapture(rid) {
 
 function DisableNoCaptureUnprotected(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i = 0; i < posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -661,7 +729,7 @@ function DisableNoCaptureUnprotected(rid) {
 
 function DisableNoCaptureProtected(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i = 0; i < posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -675,7 +743,7 @@ function DisableNoCaptureProtected(rid) {
 
 function DisableNoCaptureProtectedStronger(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i = 0; i < posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -689,7 +757,7 @@ function DisableNoCaptureProtectedStronger(rid) {
 
 function DisableMoveIntoAttack(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (game.attacked(game.them(), move.to)) continue;
@@ -700,7 +768,7 @@ function DisableMoveIntoAttack(rid) {
 
 function DisableCantMoveIntoAttack(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (!game.attacked(game.them(), move.to)) continue;
@@ -711,7 +779,7 @@ function DisableCantMoveIntoAttack(rid) {
 
 function DisableRemoveAttack(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let acnt1 = game.attackedCnt(game.them(), move.from);
@@ -724,7 +792,7 @@ function DisableRemoveAttack(rid) {
 
 function DisableRemoveAttackNoCapture(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -739,7 +807,7 @@ function DisableRemoveAttackNoCapture(rid) {
 
 function DisableRandomPieceTypes(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   // Choose pieces
   let pal = [];
   for (let i=0; i<rpar[pid][rid][1]; ++i) {
@@ -762,7 +830,7 @@ function DisableRandomPieceTypes(rid) {
 
 function DisableRandomMoves(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   let dis_cnt = posMoves.length * rpar[pid][rid][1] / 100;
   for (let i=0; i<dis_cnt; ++i) {
     let randomIndex = Math.floor(Math.random() * posMoves.length);
@@ -773,7 +841,7 @@ function DisableRandomMoves(rid) {
 
 function DisableRandomPieces(rid) {
   if (!ract[rid]) return;
-  if (game.history().length > rpar[pid][rid][0] * 2) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
   let froms = [];
   // Get unique movable pieces
   for (let i=0; i<posMoves.length; ++i) {
@@ -823,6 +891,8 @@ function DisableMoves() {
   DisableCantCaptureStrongerWithCaptured(128);
   DisableCantMultiCapture(129);
   DisableCantMultiCaptureType(130);
+  DisableCantMultiCaptureStronger(131);
+  DisableCantMultiCaptureTypeStronger(132);
 }
 
 function ChooseRules() {
@@ -889,14 +959,15 @@ let updateStatus = function() {
     });
     pid = color_to_pid[game.turn()];
     pid2 = color_to_pid[game.them()];
-    tnum = game.history().length;
-    //console.log(game.history());
-    if (game.history().length > 1) {
-      prelast_cap = game.history({verbose: true})[game.history().length - 2].captured;
+    hist = game.history({verbose: true});
+    tnum = hist.length;
+    //console.log(hist);
+    if (hist.length > 1) {
+      prelast_cap = hist[hist.length - 2].captured;
     }
     else prelast_cap = '';
-    if (game.history().length > 0) {
-      last_cap = game.history({verbose: true})[game.history().length - 1].captured;
+    if (hist.length > 0) {
+      last_cap = hist[hist.length - 1].captured;
     }
     else last_cap = '';
     for (let i=0; i<posMoves.length; ++i) {
