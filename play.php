@@ -1,5 +1,6 @@
 <?php
 require_once "lib/lib.php";
+require_once "lib/clib.php";
 require_once "lib/CsvDb.php";
 
 start_time();
@@ -8,8 +9,7 @@ echo "<link rel=icon href='icons/king.ico'>";
 echo "<title>Play FlexiChess</title>\n";
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
-// TODO: Download jquery locally
-echo "<script src='https://code.jquery.com/jquery-1.12.4.min.js'></script>\n";
+echo "<script src='js/jquery.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<table>";
@@ -48,125 +48,12 @@ for (let i=0; i<MAX_RULES; ++i) {
 }
 
 <?php
-$rdb = new CsvDb;
-$fname = "rules/rules.csv";
-echo $rdb->Open($fname);
-//print_r($rdb->header);
-echo $rdb->Select();
-//print_r($rdb->result);
+
+load_rules();
 for ($i=0; $i<count($rdb->result); ++$i) {
   echo "rname[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rname'] . "\";\n";
   echo "rdesc[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rdesc'] . "\";\n";
 }
-
-echo "rpos[0][101] = 0;\n";
-echo "rpos[0][102] = 0;\n";
-echo "rpos[0][103] = 0;\n";
-echo "rpos[0][104] = 0;\n";
-echo "rpos[0][105] = 0;\n";
-echo "rpos[0][106] = 0;\n";
-echo "rpos[0][107] = 0;\n";
-echo "rpos[0][108] = 0;\n";
-echo "rpos[0][109] = 0;\n";
-echo "rpos[0][110] = 0;\n";
-echo "rpos[0][111] = 0;\n";
-echo "rpos[0][112] = 0;\n";
-echo "rpos[0][113] = 0;\n";
-echo "rpos[0][114] = 0;\n";
-echo "rpos[0][115] = 0;\n";
-echo "rpos[0][116] = 0;\n";
-echo "rpos[0][117] = 0;\n";
-echo "rpos[0][118] = 0;\n";
-echo "rpos[0][119] = 0;\n";
-echo "rpos[0][120] = 0;\n";
-echo "rpos[0][121] = 0;\n";
-echo "rpos[0][122] = 0;\n";
-echo "rpos[0][123] = 0;\n";
-echo "rpos[0][124] = 0;\n";
-echo "rpos[0][125] = 0;\n";
-echo "rpos[0][126] = 0;\n";
-echo "rpos[0][127] = 0;\n";
-echo "rpos[0][128] = 0;\n";
-echo "rpos[0][129] = 0;\n";
-echo "rpos[0][130] = 0;\n";
-echo "rpos[0][131] = 0;\n";
-echo "rpos[0][132] = 0;\n";
-echo "rpos[0][133] = 0;\n";
-echo "rpos[0][134] = 0;\n";
-echo "rpos[0][135] = 0;\n";
-echo "rpos[0][136] = 0;\n";
-echo "rpos[0][137] = 0;\n";
-echo "rpos[0][138] = 0;\n";
-echo "rpos[0][139] = 0;\n";
-echo "rpos[0][140] = 0;\n";
-echo "rpos[0][141] = 0;\n";
-echo "rpos[0][142] = 0;\n";
-echo "rpos[0][143] = 100;\n";
-echo "rpos[0][144] = 0;\n";
-
-echo "rpar[0][101][0] = 20;\n";
-echo "rpar[0][102][0] = 20;\n";
-echo "rpar[0][103][0] = 10;\n";
-echo "rpar[0][103][1] = 3;\n";
-echo "rpar[0][104][0] = 20;\n";
-echo "rpar[0][104][1] = 1;\n";
-echo "rpar[0][105][0] = 20;\n";
-echo "rpar[0][105][1] = 1;\n";
-echo "rpar[0][106][0] = 20;\n";
-echo "rpar[0][107][0] = 20;\n";
-echo "rpar[0][108][0] = 20;\n";
-echo "rpar[0][109][0] = 20;\n";
-echo "rpar[0][110][0] = 20;\n";
-echo "rpar[0][110][1] = 1;\n";
-echo "rpar[0][111][0] = 20;\n";
-echo "rpar[0][111][1] = 1;\n";
-echo "rpar[0][112][0] = 20;\n";
-echo "rpar[0][112][1] = 1;\n";
-echo "rpar[0][113][0] = 20;\n";
-echo "rpar[0][114][0] = 20;\n";
-echo "rpar[0][115][0] = 20;\n";
-echo "rpar[0][116][0] = 20;\n";
-echo "rpar[0][117][0] = 20;\n";
-echo "rpar[0][118][0] = 5;\n";
-echo "rpar[0][119][0] = 5;\n";
-echo "rpar[0][120][0] = 5;\n";
-echo "rpar[0][121][0] = 5;\n";
-echo "rpar[0][122][0] = 20;\n";
-echo "rpar[0][123][0] = 20;\n";
-echo "rpar[0][123][1] = 2;\n";
-echo "rpar[0][124][0] = 20;\n";
-echo "rpar[0][125][0] = 20;\n";
-echo "rpar[0][125][1] = 20;\n";
-echo "rpar[0][126][0] = 20;\n";
-echo "rpar[0][126][1] = 20;\n";
-echo "rpar[0][127][0] = 20;\n";
-echo "rpar[0][128][0] = 20;\n";
-echo "rpar[0][129][0] = 20;\n";
-echo "rpar[0][129][1] = 3;\n";
-echo "rpar[0][130][0] = 20;\n";
-echo "rpar[0][130][1] = 3;\n";
-echo "rpar[0][131][0] = 20;\n";
-echo "rpar[0][131][1] = 3;\n";
-echo "rpar[0][132][0] = 20;\n";
-echo "rpar[0][132][1] = 3;\n";
-echo "rpar[0][133][0] = 20;\n";
-echo "rpar[0][133][1] = 3;\n";
-echo "rpar[0][134][0] = 20;\n";
-echo "rpar[0][134][1] = 3;\n";
-echo "rpar[0][135][0] = 20;\n";
-echo "rpar[0][135][1] = 3;\n";
-echo "rpar[0][136][0] = 20;\n";
-echo "rpar[0][137][0] = 20;\n";
-echo "rpar[0][138][0] = 20;\n";
-echo "rpar[0][139][0] = 20;\n";
-echo "rpar[0][140][0] = 20;\n";
-echo "rpar[0][141][1] = 6;\n";
-echo "rpar[0][142][1] = 3;\n";
-echo "rpar[0][143][1] = 3;\n";
-echo "rpar[0][144][1] = 3;\n";
-
-//echo "rpos[1][106] = 100;\n";
-//echo "rpar[1][106][0] = 20;\n";
 
 ?>
 
@@ -1247,7 +1134,7 @@ let updateStatus = function() {
     RemoveDisabledMoves();
     ShowRules();
     HighlightPosMoves();
-    window.setTimeout(AutoMove(pid), 500);
+    window.setTimeout(function() {AutoMove(pid)}, 500);
   }
 
   statusEl.html(status);
