@@ -27,15 +27,16 @@ echo "<table cellpadding='3'>";
 for ($i=0; $i<count($rdb->result); ++$i) {
   $rl = $rdb->result[$i];
   $rid = $rl['Rid'];
-  if ($act == "new") {
-    $rpos[$rid] = 0;
-  }
+  $rpos[$rid] = 0;
+  $rpar0[$rid] = $rl['Par0'];
+  $rpar1[$rid] = $rl['Par1'];
+  $rpar2[$rid] = $rl['Par2'];
   echo "<tr>";
   echo "<td>";
   $st = $rl['Rname'];
-  $st = str_replace("XX", "</span> <input type='number' style='width: 100px' class='form-control' id='xx$rid'> <span>", $st);
-  $st = str_replace("YY", "</span> <input type='number' style='width: 100px' class='form-control' id='yy$rid'> <span>", $st);
-  $st = str_replace("ZZ", "</span> <input type='number' style='width: 100px' class='form-control' id='zz$rid'> <span>", $st);
+  $st = str_replace("XX", "</span> <input type='number' style='width: 100px' class='form-control' id='xx$rid' value='$rpar0[$rid]'> <span>", $st);
+  $st = str_replace("YY", "</span> <input type='number' style='width: 100px' class='form-control' id='yy$rid' value='$rpar1[$rid]'> <span>", $st);
+  $st = str_replace("ZZ", "</span> <input type='number' style='width: 100px' class='form-control' id='zz$rid' value='$rpar2[$rid]'> <span>", $st);
   echo "<input type='checkbox' class='form-check-input' onchange=\"if (this.checked) {document.getElementById('pos$rid').value = '100';} else {document.getElementById('pos$rid').value = '0';}\"> ";
   echo "<input type='number' min=0 max=100 style='width: 100px' class='form-control' id='pos$rid' value='$rpos[$rid]'> % ";
   echo "<span data-toggle=tooltip data-placement=top title=\"$rl[Rdesc]\">";

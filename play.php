@@ -51,9 +51,19 @@ for (let i=0; i<MAX_RULES; ++i) {
 
 load_rules();
 for ($i=0; $i<count($rdb->result); ++$i) {
-  echo "rname[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rname'] . "\";\n";
-  echo "rdesc[" . $rdb->result[$i]['Rid'] . "] = \"" . $rdb->result[$i]['Rdesc'] . "\";\n";
+  $rl = $rdb->result[$i];
+  $rid = $rl['Rid'];
+  echo "rname[$rid] = \"$rl[Rname]\";\n";
+  echo "rdesc[$rid] = \"$rl[Rdesc]\";\n";
+  echo "rpar[0][$rid][0] = \"$rl[Par0]\";\n";
+  echo "rpar[1][$rid][0] = \"$rl[Par0]\";\n";
+  echo "rpar[0][$rid][1] = \"$rl[Par1]\";\n";
+  echo "rpar[1][$rid][1] = \"$rl[Par1]\";\n";
+  echo "rpar[0][$rid][2] = \"$rl[Par2]\";\n";
+  echo "rpar[1][$rid][2] = \"$rl[Par2]\";\n";
 }
+
+echo "rpos[0][143] = 100;\n";
 
 ?>
 
