@@ -63,7 +63,16 @@ for ($i=0; $i<count($rdb->result); ++$i) {
   echo "rpar[1][$rid][2] = \"$rl[Par2]\";\n";
 }
 
-echo "rpos[0][143] = 100;\n";
+echo "rpos[0][110] = 100;\n";
+echo "rpos[0][121] = 100;\n";
+echo "rpos[0][145] = 100;\n";
+echo "rpos[0][129] = 100;\n";
+echo "rpos[0][134] = 100;\n";
+echo "rpos[0][142] = 100;\n";
+echo "rpos[0][144] = 100;\n";
+echo "rpos[0][107] = 100;\n";
+echo "rpos[0][103] = 100;\n";
+echo "rpos[0][118] = 100;\n";
 
 ?>
 
@@ -822,7 +831,20 @@ function DisableCantMoveIntoAttack(rid) {
   if (hist.length > rpar[pid][rid][0] * 2) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (!game.attacked(game.them(), move.to)) continue;
+    if (game.attackedCnt(game.them(), move.to) <= rpar[pid][rid][1]) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCantMoveIntoAttackButCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece ||
+      game.attackedCnt(game.them(), move.to) <= rpar[pid][rid][1]) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -1049,6 +1071,7 @@ function DisableMoves() {
   DisableNeedKingMoves(142);
   DisableNeedPawnMoves(143);
   DisableNeedQueenMoves(144);
+  DisableCantMoveIntoAttackButCapture(145);
 }
 
 function ChooseRules() {

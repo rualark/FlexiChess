@@ -36,11 +36,44 @@ show_chatovod("artquiz");
     </button>
 
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-      <ul class="navbar-nav mr-auto">
-        <li class=nav-item><a class=nav-link href="rulesets.php"><b>Play</b></a></li>
-        <li class=nav-item><a class=nav-link href="ruleset.php?act=new">Setup</a></li>
-        <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
-      </ul>
+      <?php
+      if ($uid) {
+        ?>
+        <ul class="navbar-nav mr-auto">
+          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Play</b></a></li>
+          <li class=nav-item><a class=nav-link href="ruleset.php?act=new">Setup</a></li>
+          <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <?=$ua['u_name'] ?></a>
+            <div class="dropdown-menu" aria-labelledby="dropdown01">
+              <a class="dropdown-item" href="profile.php">Profile</a>
+              <?php
+              if ($ua['u_admin']) {
+                echo "<a target=_blank class='dropdown-item' href='stats.php'>Stats</a>";
+              }
+              ?>
+              <a class="dropdown-item" href="login.php?action=out">Sign out</a>
+            </div>
+          </li>
+        </ul>
+        <?php
+      }
+      else {
+        ?>
+        <ul class="navbar-nav mr-auto">
+          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Play</b></a></li>
+          <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class=nav-item><a class=nav-link href="login.php"><b>Login</b></a></li>
+          <li class=nav-item><a class=nav-link href="reg.php"><b>Sign up</b></a></li>
+        </ul>
+        <?php
+      }
+      ?>
     </div>
   </div>
 </nav>

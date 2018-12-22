@@ -1,8 +1,11 @@
 <?php
 require_once "lib/config.php";
 require_once "lib/lib.php";
+require_once "lib/auth.php";
 
 $title = "$site_name: Rulesets";
+
+login();
 
 include "template/menu.php";
 
