@@ -103,59 +103,10 @@ else {
   }
 }
 
-
 echo "<form class='form-inline' action='ruleset.php' method='post'>";
 echo "<input type=hidden name=rs_id value='$rs_id'>";
 echo "<input type=hidden name=act value=save>";
 
-function start_collapse_container($cid, $header) {
-  echo '<div class="collapse-container$cid" style="width: 100%">';
-  echo '<div class="collapse-header$cid"  align=left><span>$header...</span></div>';
-  echo '<div class="collapse-content$cid">';
-}
-
-function end_collapse_container($cid, $header) {
-  echo "</div>";
-  echo "</div>";
-  ?>
-  <script>
-    $(".collapse-header<?=$cid ?>").click(function () {
-      $header = $(this);
-      //getting the next element
-      $content = $header.next();
-      //open up the content needed - toggle the slide- if visible, slide up, if not slidedown.
-      $content.slideToggle(500, function () {
-        //execute this after slideToggle is done
-        //change text of header based on visibility of content div
-        $header.text(function () {
-          //change text based on condition
-          return $content.is(":visible") ? "<?=$header ?>" : "<?=$header ?>...";
-        });
-      });
-    });
-  </script>
-  <style>
-    .collapse-container<?=$cid ?> {
-      border:1px solid #d3d3d3;
-    }
-    .collapse-container<?=$cid ?> div {
-    }
-    .collapse-container<?=$cid ?> .collapse-header<?=$cid ?> {
-      background-color:#d3d3d3;
-      padding: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .collapse-container<?=$cid ?> .collapse-content<?=$cid ?> {
-      background-color: #f9f9f9;
-      display: none;
-      padding : 5px;
-    }
-  </style>
-  <?
-}
-
-echo "<table cellpadding='3'>";
 $old_group = "";
 $collapse_container_id = 0;
 foreach ($rla as $rid => $rl) {
@@ -165,6 +116,7 @@ foreach ($rla as $rid => $rl) {
       end_collapse_container($collapse_container_id, $old_group);
     }
     ++$collapse_container_id;
+    $old_group = $rl['Rgroup'];
     start_collapse_container($collapse_container_id, $rl['Rgroup']);
   }
   // Load defaults if new ruleset
@@ -190,7 +142,9 @@ foreach ($rla as $rid => $rl) {
   echo "</fieldset>\n";
   echo "</div>\n";
 }
+end_collapse_container($collapse_container_id, $old_group);
 
+echo "<table cellpadding='3'>";
 echo "<tr>";
 echo "<td>";
 echo "<b>Rule set name:</b> <input $readonly placeholder='Enter descriptive rule set name' pattern='.{10,}' required title='10 characters minimum' class='form-control' style='width: 800px' type=text id=rs_name name=rs_name value='$rs[rs_name]'>";

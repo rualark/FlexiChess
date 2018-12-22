@@ -9,7 +9,6 @@ function load_rules() {
   $fname = "rules/rules.csv";
   echo $rdb->Open($fname);
   echo $rdb->Select();
-  $rla = $rdb->result;
   for ($i=0; $i<count($rdb->result); ++$i) {
     $rl = $rdb->result[$i];
     $rid = $rl['Rid'];
@@ -41,4 +40,54 @@ function send_js_var($pname, $value) {
     echo "$pname = \"$value\";\n";
   }
 }
+
+function start_collapse_container($cid, $header) {
+  echo "<div class='collapse-container$cid' style='width: 100%'>";
+  echo "<div class='collapse-header$cid'  align=left><span>$header...</span></div>";
+  echo "<div class='collapse-content$cid'>";
+  echo "<table>";
+}
+
+function end_collapse_container($cid, $header) {
+  echo "</table>";
+  echo "</div>";
+  echo "</div>";
+  ?>
+  <script>
+    $(".collapse-header<?=$cid ?>").click(function () {
+      $header = $(this);
+      //getting the next element
+      $content = $header.next();
+      //open up the content needed - toggle the slide- if visible, slide up, if not slidedown.
+      $content.slideToggle(500, function () {
+        //execute this after slideToggle is done
+        //change text of header based on visibility of content div
+        $header.text(function () {
+          //change text based on condition
+          return $content.is(":visible") ? "<?=$header ?>" : "<?=$header ?>...";
+        });
+      });
+    });
+  </script>
+  <style>
+    .collapse-container<?=$cid ?> {
+      border:1px solid #d3d3d3;
+    }
+    .collapse-container<?=$cid ?> div {
+    }
+    .collapse-container<?=$cid ?> .collapse-header<?=$cid ?> {
+      background-color:#d3d3d3;
+      padding: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .collapse-container<?=$cid ?> .collapse-content<?=$cid ?> {
+      background-color: #f9f9f9;
+      display: none;
+      padding : 5px;
+    }
+  </style>
+  <?
+}
+
 ?>
