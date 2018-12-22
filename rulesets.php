@@ -16,24 +16,27 @@ echo "<table class='table'>"; // table-striped table-hover
 echo "<thead>";
 echo "<tr>";
 echo "<th scope=col style='text-align: center;'>Play</th>";
-echo "<th scope=col style='text-align: center;'>Created</th>";
 echo "<th scope=col style='text-align: center;'>Name</th>";
 echo "<th scope=col style='text-align: center;'>Difficulty</th>";
+echo "<th scope=col style='text-align: center;'>Author</th>";
+echo "<th scope=col style='text-align: center;'>Created</th>";
 echo "</tr>\n";
 echo "</thead>";
 echo "<tbody>";
-$r = mysqli_query($ml, "SELECT * FROM rulesets 
-    ORDER BY time_created DESC
+$r = mysqli_query($ml, "SELECT * FROM rulesets
+    LEFT JOIN users USING(u_id) 
+    ORDER BY playcount DESC, time_created DESC
     LIMIT 200");
 echo mysqli_error($ml);
 $n = mysqli_num_rows($r);
 for ($i=0; $i<$n; ++$i) {
   $w = mysqli_fetch_assoc($r);
   echo "<tr>";
-  echo "<td align='center'><img height=20 src=img/play6.png></td>";
-  echo "<td align='center'>$w[time_created]</td>";
-  echo "<td align='center'>$w[rs_name]</td>";
+  echo "<td align='center'><a href='play.php?rs_id0=$w[rs_id]'><img height=24 src=img/play6.png></td>";
+  echo "<td align='center'><a href='ruleset.php?act=edit&rs_id=$w[rs_id]'>$w[rs_name]</td>";
   echo "<td align='center'>$w[rs_difficulty]</td>";
+  echo "<td align='center'>$w[u_name]</td>";
+  echo "<td align='center'>$w[time_created]</td>";
 }
 echo "</table>";
 

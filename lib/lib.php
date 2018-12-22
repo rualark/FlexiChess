@@ -11,7 +11,7 @@ function start_time() {
 function secure_variable($st) {
   GLOBAL $ml;
   if (isset($_GET[$st])) return mysqli_real_escape_string($ml, $_GET[$st]);
-  return "";
+  else return secure_variable_post($st);
 }
 
 function secure_variable_post($st) {

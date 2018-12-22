@@ -1,12 +1,26 @@
 <?php
+require_once "lib/config.php";
+require_once "lib/auth.php";
 require_once "lib/lib.php";
 require_once "lib/clib.php";
-require_once "lib/CsvDb.php";
 
 start_time();
 
-echo "<link rel=icon href='icons/king.ico'>";
-echo "<title>Play FlexiChess</title>\n";
+$rs_id0 = secure_variable("rs_id0");
+$rs_id1 = secure_variable("rs_id1");
+
+$title = "$site_name: Play";
+
+login();
+
+load_rules();
+
+include "template/menu.php";
+
+echo "<p>";
+echo "<div class=container>";
+
+
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='js/jquery.min.js'></script>\n";
@@ -50,19 +64,46 @@ for (let i=0; i<MAX_RULES; ++i) {
 <?php
 
 load_rules();
+
+$rpos = array();
+$rpar = array();
+
 for ($i=0; $i<count($rdb->result); ++$i) {
   $rl = $rdb->result[$i];
   $rid = $rl['Rid'];
   echo "rname[$rid] = \"$rl[Rname]\";\n";
   echo "rdesc[$rid] = \"$rl[Rdesc]\";\n";
-  echo "rpar[0][$rid][0] = \"$rl[Par0]\";\n";
-  echo "rpar[1][$rid][0] = \"$rl[Par0]\";\n";
-  echo "rpar[0][$rid][1] = \"$rl[Par1]\";\n";
-  echo "rpar[1][$rid][1] = \"$rl[Par1]\";\n";
-  echo "rpar[0][$rid][2] = \"$rl[Par2]\";\n";
-  echo "rpar[1][$rid][2] = \"$rl[Par2]\";\n";
+  $rpar[0][$rid][0] = $rl['Par0'];
+  $rpar[1][$rid][0] = $rl['Par0'];
+  $rpar[0][$rid][1] = $rl['Par1'];
+  $rpar[1][$rid][1] = $rl['Par1'];
+  $rpar[0][$rid][2] = $rl['Par2'];
+  $rpar[1][$rid][2] = $rl['Par2'];
 }
 
+if ($rs_id0) apply_ruleset(0, $rs_id0);
+if ($rs_id1) apply_ruleset(1, $rs_id1);
+
+//$rpos[0][110] = 100;
+
+for ($i=0; $i<count($rdb->result); ++$i) {
+  $rl = $rdb->result[$i];
+  $rid = $rl['Rid'];
+  if ($rpos[0][$rid]) {
+    send_js_var("rpos[0][$rid]", $rpos[0][$rid]);
+    send_js_var("rpar[0][$rid][0]", $rpar[0][$rid][0]);
+    send_js_var("rpar[0][$rid][1]", $rpar[0][$rid][1]);
+    send_js_var("rpar[0][$rid][2]", $rpar[0][$rid][2]);
+  }
+  if ($rpos[1][$rid]) {
+    send_js_var("rpos[1][$rid]", $rpos[1][$rid]);
+    send_js_var("rpar[1][$rid][0]", $rpar[1][$rid][0]);
+    send_js_var("rpar[1][$rid][1]", $rpar[1][$rid][1]);
+    send_js_var("rpar[1][$rid][2]", $rpar[1][$rid][2]);
+  }
+}
+
+/*
 echo "rpos[0][110] = 100;\n";
 echo "rpos[0][121] = 100;\n";
 echo "rpos[0][145] = 100;\n";
@@ -73,6 +114,7 @@ echo "rpos[0][144] = 100;\n";
 echo "rpos[0][107] = 100;\n";
 echo "rpos[0][103] = 100;\n";
 echo "rpos[0][118] = 100;\n";
+*/
 
 ?>
 
