@@ -69,6 +69,7 @@ if ($act == "save") {
 include "template/menu.php";
 
 echo "<div class=container>";
+$readonly = "";
 if ($act == "new") {
   echo "<br><h2 align=center>New rule set</h2>";
 }
@@ -100,6 +101,10 @@ else {
     }
   }
   echo "<br><h2 align=center>Rule set $rs_id: $rs[rs_name]</h2>";
+  // Cannot change ruleset of other user (only admin)
+  if ($rs['u_id'] != $uid && !$ua['u_admin']) {
+    $readonly = "readonly";
+  }
 }
 
 
@@ -121,13 +126,13 @@ for ($i=0; $i<count($rdb->result); ++$i) {
   echo "<tr>";
   echo "<td>";
   $st = $rl['Rname'];
-  $st = str_replace("XX", "</span> <input type='number' min=0 style='width: 100px' class='form-control' id='xx$rid' name='xx$rid' value='$rpar0[$rid]'> <span>", $st);
-  $st = str_replace("YY", "</span> <input type='number' min=0 style='width: 100px' class='form-control' id='yy$rid' name='yy$rid' value='$rpar1[$rid]'> <span>", $st);
-  $st = str_replace("ZZ", "</span> <input type='number' min=0 style='width: 100px' class='form-control' id='zz$rid' name='zz$rid' value='$rpar2[$rid]'> <span>", $st);
+  $st = str_replace("XX", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='xx$rid' name='xx$rid' value='$rpar0[$rid]'> <span>", $st);
+  $st = str_replace("YY", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='yy$rid' name='yy$rid' value='$rpar1[$rid]'> <span>", $st);
+  $st = str_replace("ZZ", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='zz$rid' name='zz$rid' value='$rpar2[$rid]'> <span>", $st);
   echo "<input type='checkbox' class='form-check-input' onchange=\"if (this.checked) {document.getElementById('pos$rid').value = '100';} else {document.getElementById('pos$rid').value = '0';}\" ";
   if ($rpos[$rid] == 100) echo "checked";
   echo "> ";
-  echo "<input type='number' min=0 max=100 style='width: 100px' class='form-control' id='pos$rid' name='pos$rid' value='$rpos[$rid]'> % ";
+  echo "<input $readonly type='number' min=0 max=100 style='width: 100px' class='form-control' id='pos$rid' name='pos$rid' value='$rpos[$rid]'> % ";
   echo "<span data-toggle=tooltip data-placement=top title=\"$rl[Rdesc]\">";
   echo "$st\n";
   echo "</span>";
@@ -137,7 +142,7 @@ for ($i=0; $i<count($rdb->result); ++$i) {
 
 echo "<tr>";
 echo "<td>";
-echo "<b>Rule set name:</b> <input placeholder='Enter descriptive rule set name' pattern='.{10,}' required title='10 characters minimum' class='form-control' style='width: 800px' type=text id=rs_name name=rs_name value='$rs[rs_name]'>";
+echo "<b>Rule set name:</b> <input $readonly placeholder='Enter descriptive rule set name' pattern='.{10,}' required title='10 characters minimum' class='form-control' style='width: 800px' type=text id=rs_name name=rs_name value='$rs[rs_name]'>";
 if ($rs_id) {
   echo "<tr>";
   echo "<td>";
@@ -146,7 +151,12 @@ if ($rs_id) {
 }
 echo "<tr>";
 echo "<td>";
-echo "<button type='submit' class='btn btn-primary mb-2'>Save rule set</button>";
+if ($readonly == "readonly") {
+  echo "<span data-toggle=tooltip data-placement=top title='Cannot change this rule set, because it belongs to a different user'><a class=\"btn btn-secondary disabled mb-2\" href='#' role=\"button\" >Save rule set</a></span>";
+}
+else {
+  echo "<button type='submit' class='btn btn-primary mb-2'>Save rule set</button>";
+}
 echo "</table>";
 echo "</form>";
 
