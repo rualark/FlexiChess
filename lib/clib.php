@@ -1,18 +1,24 @@
 <?php
 
 require_once "CsvDb.php";
-$rdb = array();
+$rla = array();
 
 function load_rules() {
-  GLOBAL $rdb;
+  GLOBAL $rla;
   $rdb = new CsvDb;
   $fname = "rules/rules.csv";
   echo $rdb->Open($fname);
   echo $rdb->Select();
+  $rla = $rdb->result;
+  for ($i=0; $i<count($rdb->result); ++$i) {
+    $rl = $rdb->result[$i];
+    $rid = $rl['Rid'];
+    $rla[$rid] = $rdb->result[$i];
+  }
 }
 
 function apply_ruleset($pid, $rs_id) {
-  GLOBAL $ml, $prw, $rdb, $rpos, $rpar;
+  GLOBAL $ml, $prw, $rpos, $rpar;
   // Load rules
   $r = mysqli_query($ml,
     "SELECT * FROM rs_rules
@@ -23,14 +29,10 @@ function apply_ruleset($pid, $rs_id) {
     $w = mysqli_fetch_assoc($r);
     $rid = $w['r_id'];
     $prw[$pid][$rid] = $w;
-    for ($x=0; $x<count($rdb->result); ++$x) {
-      $rl = $rdb->result[$x];
-      if ($rl['Rid'] != $rid) continue;
-      $rpos[$pid][$rid] = $w['r_poss'];
-      $rpar[$pid][$rid][0] = $rl['Par0'];
-      $rpar[$pid][$rid][1] = $rl['Par1'];
-      $rpar[$pid][$rid][2] = $rl['Par2'];
-    }
+    $rpos[$pid][$rid] = $w['r_poss'];
+    $rpar[$pid][$rid][0] = $w['r_par0'];
+    $rpar[$pid][$rid][1] = $w['r_par1'];
+    $rpar[$pid][$rid][2] = $w['r_par2'];
   }
 }
 

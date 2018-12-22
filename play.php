@@ -36,9 +36,9 @@ echo "<button onclick=\"RandomMove();\">Random</button>\n";
 echo "<p><span id=status></span></p>";
 //echo "<p>FEN: <span id=fen></span></p>";
 echo "<p>PGN: <span id=pgn></span></p>";
+echo "<p><span id=bcaptures></span></p>";
 echo "<p><span id=brules></span></p>";
 echo "<p><span id=wrules></span></p>";
-echo "<p><span id=bcaptures></span></p>";
 echo "<p><span id=wcaptures></span></p>";
 echo "</table>";
 ?>
@@ -68,9 +68,7 @@ load_rules();
 $rpos = array();
 $rpar = array();
 
-for ($i=0; $i<count($rdb->result); ++$i) {
-  $rl = $rdb->result[$i];
-  $rid = $rl['Rid'];
+foreach ($rla as $rid => $rl) {
   echo "rname[$rid] = \"$rl[Rname]\";\n";
   echo "rdesc[$rid] = \"$rl[Rdesc]\";\n";
   $rpar[0][$rid][0] = $rl['Par0'];
@@ -86,9 +84,7 @@ if ($rs_id1) apply_ruleset(1, $rs_id1);
 
 //$rpos[0][110] = 100;
 
-for ($i=0; $i<count($rdb->result); ++$i) {
-  $rl = $rdb->result[$i];
-  $rid = $rl['Rid'];
+foreach ($rla as $rid => $rl) {
   if ($rpos[0][$rid]) {
     send_js_var("rpos[0][$rid]", $rpos[0][$rid]);
     send_js_var("rpar[0][$rid][0]", $rpar[0][$rid][0]);
@@ -1147,7 +1143,7 @@ function ShowRules() {
     if (ract[rid] === 3) rst3 += fst;
     else if (ract[rid] === 2) rst2 += fst;
     else if (ract[rid] === 1) rst1 += fst;
-    else rst0 += st + '<br>';
+    else rst0 += fst;
   });
   hst =
     "<font color=red>" + rst2 + "</font>" +

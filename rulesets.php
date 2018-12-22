@@ -24,7 +24,7 @@ echo "</tr>\n";
 echo "</thead>";
 echo "<tbody>";
 $r = mysqli_query($ml, "SELECT * FROM rulesets
-    LEFT JOIN users USING(u_id) 
+    LEFT JOIN users USING (u_id) 
     ORDER BY playcount DESC, time_created DESC
     LIMIT 200");
 echo mysqli_error($ml);
@@ -32,7 +32,10 @@ $n = mysqli_num_rows($r);
 for ($i=0; $i<$n; ++$i) {
   $w = mysqli_fetch_assoc($r);
   echo "<tr>";
-  echo "<td align='center'><a href='play.php?rs_id0=$w[rs_id]'><img height=24 src=img/play6.png></td>";
+  echo "<td align='center'>";
+  echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='play.php?rs_id0=$w[rs_id]'><img src=img/play_brown.png></a> ";
+  echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$w[rs_id]&rs_id1=$w[rs_id]'><img src=img/play_cyan.png></a>";
+  echo "</td>";
   echo "<td align='center'><a href='ruleset.php?act=edit&rs_id=$w[rs_id]'>$w[rs_name]</td>";
   echo "<td align='center'>$w[rs_difficulty]</td>";
   echo "<td align='center'>$w[u_name]</td>";

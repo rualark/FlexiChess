@@ -46,6 +46,8 @@ function share_link($url, $title, $desc, $img, $services='facebook,vkontakte,gpl
 function share_header($url, $title, $desc, $img) {
   echo "<meta property='og:url' content='$url' />";
   echo "<meta property='og:image' content='$img' />";
+  echo "<meta property='og:image:width' content='600' />";
+  echo "<meta property='og:image:height' content='315' />";
   echo "<meta property='og:title' content='$title' />";
   echo "<meta property='og:description' content='$desc' />";
 }

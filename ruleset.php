@@ -23,9 +23,7 @@ if ($act == "save") {
   $rcount = 0;
   $rcount100 = 0;
   $diff = 0;
-  for ($i=0; $i<count($rdb->result); ++$i) {
-    $rl = $rdb->result[$i];
-    $rid = $rl['Rid'];
+  foreach ($rla as $rid => $rl) {
     if ($_POST["pos$rid"] > 0) ++$rcount;
     if ($_POST["pos$rid"] == 100) ++$rcount100;
     $diff += $_POST["pos$rid"];
@@ -55,9 +53,7 @@ if ($act == "save") {
       WHERE rs_id='$rs_id'");
     echo mysqli_error($ml);
   }
-  for ($i=0; $i<count($rdb->result); ++$i) {
-    $rl = $rdb->result[$i];
-    $rid = $rl['Rid'];
+  foreach ($rla as $rid => $rl) {
     $r = mysqli_query($ml,
       "REPLACE INTO rs_rules 
     (rs_id,r_id,r_poss,r_par0,r_par1,r_par2) 
@@ -91,16 +87,16 @@ else {
     $w = mysqli_fetch_assoc($r);
     $rid = $w['r_id'];
     $rw[$rid] = $w;
-    for ($x=0; $x<count($rdb->result); ++$x) {
-      $rl = $rdb->result[$x];
-      if ($rl['Rid'] != $rid) continue;
-      $rpos[$rid] = $w['r_poss'];
-      $rpar0[$rid] = $w['r_par0'];
-      $rpar1[$rid] = $w['r_par1'];
-      $rpar2[$rid] = $w['r_par2'];
-    }
+    $rpos[$rid] = $w['r_poss'];
+    $rpar0[$rid] = $w['r_par0'];
+    $rpar1[$rid] = $w['r_par1'];
+    $rpar2[$rid] = $w['r_par2'];
   }
   echo "<br><h2 align=center>Rule set $rs_id: $rs[rs_name]</h2>";
+  echo "<p align='center'>";
+  echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='play.php?rs_id0=$rs_id'><img src=img/play_brown.png></a> ";
+  echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$rs_id&rs_id1=$rs_id'><img src=img/play_cyan.png></a>";
+  echo "</p>";
   // Cannot change ruleset of other user (only admin)
   if ($rs['u_id'] != $uid && !$ua['u_admin']) {
     $readonly = "readonly";
@@ -113,9 +109,7 @@ echo "<input type=hidden name=rs_id value='$rs_id'>";
 echo "<input type=hidden name=act value=save>";
 
 echo "<table cellpadding='3'>";
-for ($i=0; $i<count($rdb->result); ++$i) {
-  $rl = $rdb->result[$i];
-  $rid = $rl['Rid'];
+foreach ($rla as $rid => $rl) {
   // Load defaults if new ruleset
   if (!isset($rpos[$rid])) {
     $rpos[$rid] = 0;
