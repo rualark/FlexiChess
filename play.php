@@ -1264,5 +1264,6 @@ updateStatus();
 </script>
 
 <?php
-stop_time();
+//stop_time();
+require_once "template/footer.php";
 ?>
