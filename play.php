@@ -50,7 +50,7 @@ if ($show_mobile) {
   <meta name="application-name" content="FlexiChess">
   <meta name="apple-mobile-web-app-title" content="FlexiChess">
   <meta name="msapplication-starturl" content="/">
-  <meta name="viewport" content="width=620,shrink-to-fit=no">
+  <meta name="viewport" content="width=700,shrink-to-fit=no">
   <style>
     body {
       overscroll-behavior-y: contain;
@@ -75,6 +75,7 @@ echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='js/jquery.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
+echo "<script src='js/lib.js'></script>\n";
 echo "<table>";
 echo "<tr>";
 echo "<td valign='top'>";
