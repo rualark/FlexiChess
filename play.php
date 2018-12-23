@@ -8,6 +8,11 @@ start_time();
 
 $rs_id0 = secure_variable("rs_id0");
 $rs_id1 = secure_variable("rs_id1");
+$view = secure_variable("view");
+if ($view == "mobile" || ($view == "" && is_mobile())) $show_mobile = 1;
+
+if ($rs_id0 == '') $rs_id0 = 0;
+if ($rs_id1 == '') $rs_id1 = 0;
 
 $title = "$site_name: Play";
 
@@ -15,11 +20,44 @@ login();
 
 load_rules();
 
-include "template/menu.php";
+// Load ruleset
+$r = mysqli_query($ml,
+  "SELECT * FROM rulesets
+    LEFT JOIN users USING (u_id) 
+    WHERE rs_id='$rs_id0'");
+echo mysqli_error($ml);
+$rs0 = mysqli_fetch_assoc($r);
+// Load ruleset
+$r = mysqli_query($ml,
+  "SELECT * FROM rulesets
+    LEFT JOIN users USING (u_id) 
+    WHERE rs_id='$rs_id1'");
+echo mysqli_error($ml);
+$rs1 = mysqli_fetch_assoc($r);
 
-echo "<p>";
-echo "<div class=container>";
+if ($show_mobile) {
+  $rule_height = 100;
+  $rule_width = 600;
+  $board_width = 600;
+  ?>
+  <link rel="manifest" href="manifest.json">
 
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="FlexiChess">
+  <meta name="apple-mobile-web-app-title" content="FlexiChess">
+  <meta name="msapplication-starturl" content="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <?
+}
+else {
+  include "template/menu.php";
+  echo "<p>";
+  echo "<div class=container>";
+  $rule_height = 200;
+  $rule_width = 400;
+  $board_width = 600;
+}
 
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
@@ -29,17 +67,29 @@ echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<table>";
 echo "<tr>";
 echo "<td valign='top'>";
-echo "<div id='board' style='width: 600px'></div>\n";
-echo "<td valign='top'>";
+echo "<div id='board' style='width: {$board_width}px'></div>\n";
+if (!$show_mobile) echo "<td valign='top'>";
 echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
-//echo "<button title='Moves history' data-html=true data-toggle=popover data-placement=bottom data-content=Content>History</button>";
+if ($show_mobile) {
+  echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
+  echo "<input type='hidden' name='rs_id0' value='$rs_id0'>";
+  echo "<input type='hidden' name='rs_id1' value='$rs_id1'>";
+  echo "<input type='hidden' name='view' value='desktop'>";
+  echo "<input type=submit value='Desktop view'></form>\n";
+}
+else {
+  echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
+  echo "<input type='hidden' name='rs_id0' value='$rs_id0'>";
+  echo "<input type='hidden' name='rs_id1' value='$rs_id1'>";
+  echo "<input type='hidden' name='view' value='mobile'>";
+  echo "<input type=submit value='Mobile view'></form>\n";
+}
 echo "<br><span id=status></span>";
-echo "<div style='line-height: 1; width: 400px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
-//echo "<p>FEN: <span id=fen></span></p>";
+echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 echo "<div style='width: 400px' id=bcaptures></div>";
-echo "<div style='line-height: 1; width: 400px; height: 200px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
-echo "<div style='line-height: 1; width: 400px; height: 200px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
+echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
+echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
 echo "<div style='width: 400px; ' id=wcaptures></div>";
 echo "</table>";
 ?>
@@ -61,6 +111,7 @@ for (let i=0; i<MAX_RULES; ++i) {
   rpar[0][i] = [];
   rpar[1][i] = [];
 }
+let rs_id0, rs_id1;
 
 <?php
 
@@ -113,6 +164,8 @@ echo "rpos[0][103] = 100;\n";
 echo "rpos[0][118] = 100;\n";
 */
 
+echo "rs_id0 = $rs_id0;\n";
+echo "rs_id1 = $rs_id1;\n";
 ?>
 
 let color_to_pid = [];
@@ -1133,6 +1186,10 @@ function ShowRules() {
   let rst2 = '';
   let rst1 = '';
   let rst0 = '';
+  let hst = '';
+  let bst = '';
+  let wst = '';
+  let rst = '';
   rpos[pid].forEach(function(pos, rid, arr) {
     if (pos === 0) return;
     let st = rname[rid];
@@ -1160,13 +1217,39 @@ function ShowRules() {
     else if (ract[rid] === 1) rst1 += fst;
     else rst0 += fst;
   });
-  hst =
+  hst +=
     "<font color=red>" + rst2 + "</font>" +
     "<font color=orange>" + rst1 + "</font>" +
     "<font color=#7777ff>" + rst3 + "</font>" +
     "<font color=green>" + rst0 + "</font>";
-  if (game.turn() === 'b') brulesEl.html(hst);
-  else wrulesEl.html(hst);
+  if (game.turn() === 'b') bst = hst;
+  else wst = hst;
+  rst = "<font color=white>Black rule set: ";
+  if (rs_id0) {
+    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_id0?>&act=view><font color=white><?=$rs0['rs_name']?></font></a>";
+  }
+  else {
+    rst += "None";
+  }
+  rst += "</font><br>";
+  bst = rst + bst;
+  rst = "White rule set: ";
+  if (rs_id1) {
+    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_id1?>&act=view><font color=black><?=$rs1['rs_name']?></font></a>";
+  }
+  else {
+    rst += "None";
+  }
+  rst += "</font><br>";
+  wst = rst + wst;
+  if (game.history().length === 0) {
+    brulesEl.html(bst);
+    wrulesEl.html(wst);
+  }
+  else {
+    if (game.turn() === 'b') brulesEl.html(bst);
+    else wrulesEl.html(wst);
+  }
 }
 
 let updateStatus = function() {
@@ -1288,5 +1371,7 @@ updateStatus();
 
 <?php
 //stop_time();
-require_once "template/footer.php";
+if ($view != "mobile") {
+  require_once "template/footer.php";
+}
 ?>
