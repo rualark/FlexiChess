@@ -40,8 +40,8 @@ show_chatovod("artquiz");
       if ($uid) {
         ?>
         <ul class="navbar-nav mr-auto">
-          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Play</b></a></li>
-          <li class=nav-item><a class=nav-link href="ruleset.php?act=new">Setup</a></li>
+          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Rule sets</b></a></li>
+          <li class=nav-item><a class=nav-link href="ruleset.php?act=new">New</a></li>
           <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
         </ul>
         <ul class="navbar-nav">
@@ -64,7 +64,7 @@ show_chatovod("artquiz");
       else {
         ?>
         <ul class="navbar-nav mr-auto">
-          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Play</b></a></li>
+          <li class=nav-item><a class=nav-link href="rulesets.php"><b>Rule sets</b></a></li>
           <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
         </ul>
         <ul class="navbar-nav">

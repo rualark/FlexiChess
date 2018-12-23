@@ -90,4 +90,20 @@ function end_collapse_container($cid, $header) {
   <?
 }
 
+function get_difficulty($rid, $pos, $par0, $par1, $par2) {
+  GLOBAL $rla;
+  $cdif = $rla[$rid]['Difficulty'];
+  $cdif = str_ireplace("x", $par0, $cdif);
+  $cdif = str_ireplace("y", $par1, $cdif);
+  $cdif = str_ireplace("z", $par2, $cdif);
+  $cdif2 = eval('return '.$cdif.';');
+  //echo "Evaluated '$cdif' to $cdif2 ";
+  if (strpos($rla[$rid]['Rname'], 'XX') !== false) {
+    $cdif2 = $cdif2 * min(20, $par0) / 20.0;
+  }
+  $cdif2 *= $pos / 100.0;
+  //echo "($cdif2)";
+  //echo "<br>";
+  return $cdif2;
+}
 ?>

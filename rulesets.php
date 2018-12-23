@@ -37,7 +37,7 @@ for ($i=0; $i<$n; ++$i) {
   echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$w[rs_id]&rs_id1=$w[rs_id]'><img src=img/play_cyan.png></a>";
   echo "</td>";
   echo "<td align='center'><a href='ruleset.php?act=view&rs_id=$w[rs_id]'>$w[rs_name]</td>";
-  echo "<td align='center'>$w[rs_difficulty]</td>";
+  echo "<td align='center'>" . round($w['rs_difficulty']) . "</td>";
   echo "<td align='center'>$w[u_name]</td>";
   echo "<td align='center'>$w[time_created]</td>";
 }

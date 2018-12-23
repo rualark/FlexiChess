@@ -24,9 +24,16 @@ if ($act == "save") {
   $rcount100 = 0;
   $diff = 0;
   foreach ($rla as $rid => $rl) {
+    // Validate
+    if ($_POST["pos$rid"] < 0) $_POST["pos$rid"] = 0;
+    if ($_POST["pos$rid"] > 100) $_POST["pos$rid"] = 100;
+    if ($_POST["xx$rid"] < 0) $_POST["xx$rid"] = 0;
+    if ($_POST["yy$rid"] < 0) $_POST["yy$rid"] = 0;
+    if ($_POST["zz$rid"] < 0) $_POST["zz$rid"] = 0;
+    if (!$_POST["pos$rid"]) continue;
     if ($_POST["pos$rid"] > 0) ++$rcount;
     if ($_POST["pos$rid"] == 100) ++$rcount100;
-    $diff += $_POST["pos$rid"];
+    $diff += get_difficulty($rid, $_POST["pos$rid"], $_POST["xx$rid"], $_POST["yy$rid"], $_POST["zz$rid"]);
   }
   if (!$rs_id) {
     $r = mysqli_query($ml,
@@ -60,6 +67,7 @@ if ($act == "save") {
     VALUES ('$rs_id', '$rid', '".$_POST["pos$rid"]."', '".$_POST["xx$rid"]."', '".$_POST["yy$rid"]."', '".$_POST["zz$rid"]."')");
     echo mysqli_error($ml);
   }
+  die ("<script language=javascript>location.replace('ruleset.php?rs_id=$rs_id&act=view');</script>");
 }
 
 include "template/menu.php";
@@ -167,7 +175,10 @@ function show_edit_ruleset() {
 
 function show_view_ruleset() {
   GLOBAL $rla, $rs_id, $readonly, $rs, $rpos, $rpar0, $rpar1, $rpar2;
-  echo "<table>";
+  echo "<table align=center border=2 cellpadding='3'>";
+  echo "<tr>";
+  echo "<th bgcolor='#cccccc'>Probability&nbsp;&nbsp;</th>";
+  echo "<th bgcolor='#cccccc'>&nbsp;&nbsp;Rule</th>";
   foreach ($rla as $rid => $rl) {
     if (!$rpos[$rid]) continue;
     $st = $rl['Rname'];
@@ -178,11 +189,16 @@ function show_view_ruleset() {
     $st2 = str_replace("XX", "$rpar0[$rid]", $st2);
     $st2 = str_replace("YY", "$rpar1[$rid]", $st2);
     $st2 = str_replace("ZZ", "$rpar2[$rid]", $st2);
+    $diff = round(get_difficulty($rid, $rpos[$rid], $rpar0[$rid], $rpar1[$rid], $rpar2[$rid]), 1);
+    $color = make_color(255,
+      max(0, 255 - 2 * $diff),
+      max(0, 255 - 2 * $diff)
+      );
     echo "<tr>";
-    echo "<td align='right'>";
+    echo "<td align='right' bgcolor='$color'>";
     echo "<b>$rpos[$rid]%&nbsp;&nbsp;</b>";
-    echo "<td>";
-    echo "<span data-toggle=tooltip data-placement=top title=\"$st2\">$st</span><br>";
+    echo "<td bgcolor='$color'>";
+    echo "&nbsp;&nbsp;<span data-toggle=tooltip data-placement=top title=\"$st2\nDifficulty: $diff\">$st</span><br>";
   }
   echo "</table>";
   echo "<br>";
@@ -196,6 +212,7 @@ else {
 }
 
 if ($rs_id) {
+  echo "<p>Rule set difficulty: " . round($rs['rs_difficulty']) . "<br>";
   echo "<p>This rule set was created by $rs[u_name] at $rs[time_created]";
   if ($rs['time_changed'] != $rs['time_created']) echo " and changed at $rs[time_changed]";
 }

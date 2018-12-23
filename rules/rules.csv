@@ -1,46 +1,46 @@
-Rid;Par0;Par1;Rgroup;Rname;Rdesc
-102;200;;I must take;Must take if I am stronger (XX turns);I must take only if my taking piece is stronger than piece taken (during first XX turns). In other cases I can take or not take
-113;200;;I must take;Must take (XX turns);I must take (during first XX turns). When more than one capture is available, I may capture any.
-114;200;;I must take;Must take weakest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture weakest target
-115;200;;I must take;Must take with strongest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture with my strongest piece
-116;200;;I must take;Take protected if stronger (XX turns);I must take only if my taking piece is stronger than piece taken and taken piece is protected (during first XX turns). In other cases I can take or not take.
-106;200;;I can't take;Can't capture stronger (XX turns);I cannot capture stronger pieces than my capturing piece (during first XX turns)
-108;200;;I can't take;Can't capture from check (XX turns);I cannot capture if I am checked and can escape without capturing (during first XX turns)
-122;200;;I can't take;King can't capture from check (XX turns);I cannot capture with king if I am checked and can escape without capturing (during first XX turns)
-117;200;;I can't take;Can't capture (XX turns);I cannot capture (during first XX turns)
-118;5;;I can't take;Can't capture first (XX turns);I cannot capture until you capture first of my pieces or pawns (during first XX turns)
-119;200;;I can't take;Can't capture unprotected (XX turns);I cannot capture your pieces, which are not protected
-120;200;;I can't take;Can't capture stronger protected (XX turns);I cannot capture your stronger pieces, which are protected (during first XX turns)
-121;200;;I can't take;Can take only weakest (XX turns);If I can capture, I have to capture smallest piece (during first XX turns)
-127;200;;I can't take;Can't capture with captured piece type (XX turns);I cannot capture with piece type, which was just captured by you (during first XX turns)
-128;200;;I can't take;Can't capture stronger piece with captured piece type (XX turns);I cannot capture stronger piece with piece type, which was just captured by you (during first XX turns)
-129;200;2;I can't take;Can't capture YY times in a row (XX turns);I cannot capture if I captured in my YY previous turns (during first XX turns)
-130;200;3;I can't take;Can't capture YY times in a row with same piece type (XX turns);I cannot capture if I captured with this piece type in my YY previous turns (during first XX turns)
-131;200;3;I can't take;Can't capture stronger YY times in a row (XX turns);I cannot capture a stronger piece if I captured in my YY previous turns (during first XX turns)
-132;200;3;I can't take;Can't capture stronger YY times in a row with same piece type (XX turns);I cannot capture a stronger piece if I captured with this piece type in my YY previous turns (during first XX turns)
-133;200;3;I can't take;Can't capture YY times in a row with same piece (XX turns);I cannot capture if I captured with this piece in my YY previous turns (during first XX turns)
-136;200;;I can't take;Can't capture capturer (XX turns);I cannot capture your piece, which just captured my piece (during first XX turns)
-137;200;;I can't take;Can't capture stronger capturer (XX turns);I cannot capture your stronger piece, which just captured my piece (during first XX turns)
-138;200;;I can't take;Can't capture after your capture (XX turns);I cannot capture if in previous move you captured my piece (during first XX turns)
-139;200;;I can't take;Can't capture stronger after your capture (XX turns);I cannot capture stronger piece if in previous move you captured my piece (during first XX turns)
-140;200;;I can't take;Can capture only after your capture (XX turns);I can only capture if in previous move you captured my piece (during first XX turns)
-110;200;1;I must prevent your attack;Remove your attack if >YY (XX turns);I have to remove your attack if more than YY pieces attack my piece (during first XX turns)
-111;200;1;I must prevent your attack;Remove your attack not capture if >YY (XX turns);I have to remove your attack, but not capture your piece - if you attack my piece with more than YY pieces (during first XX turns)
-124;200;1;I must prevent your attack;Can't move into >YY attacks (XX turns);I cannot move into your attack if you will attack me by more than YY pieces (during first XX turns)
-145;200;1;I must prevent your attack;Can't move into >YY attacks without capture (XX turns);I cannot move into your attack if you will attack me by more than YY pieces, except if I capture (during first XX turns)
-109;200;;I must threaten my piece;Move into attack (XX turns);I have to move into your attack (during first XX turns)
-103;10;2;My piece is locked;Move only pawns until you capture YY value (XX turns);I can move only pawns (during first XX turns) or until you capture pieces with aggregate value YY
-104;200;1;My piece is locked;Can't move if attacked >YY (XX turns);I cannot move piece, which is attacked by more than YY pieces (during first XX turns)
-105;200;1;My piece is locked;Move only attacked >YY (XX turns);If you attack one of my pieces with more than YY pieces, I can move only that piece (during first XX turns)
-112;200;1;My piece is locked;Move only attacked >YY without capture (XX turns);If you attack one of my pieces with more than YY pieces (during first XX turns), I can move only that piece, but cannot capture
-123;200;2;My piece is locked;Can move only YY random piece types (XX turns);During XX first turns YY types of pieces are selected randomly, which I can move
-126;200;20;My piece is locked;Randomly disable YY% pieces (XX turns);YY% of possible moving pieces are randomly disabled (during first XX turns)
-134;200;3;My piece is locked;Can't move same piece YY times in a row (XX turns);I cannot move the same piece YY times in a row (during first XX turns)
-135;200;3;My piece is locked;Can't move same piece type YY times in a row (XX turns);I cannot move the same piece type YY times in a row (during first XX turns)
-141;;6;My piece is locked;Must move each piece type every YY turns;I have to move each piece type at least once every YY turns
-142;;5;My piece is locked;Must move King every YY turns;I have to move King at least once every YY turns
-143;;3;My piece is locked;Must move Pawn every YY turns;I have to move Pawn at least once every YY turns
-144;;5;My piece is locked;Must move Queen every YY turns;I have to move Queen at least once every YY turns
-101;200;;My moves are limited;Random move (XX turns);My move is replaced with a random move (during first XX turns)
-107;2;;My moves are limited;Pawns move only 1 square (XX turns);My pawns can move only one square (during first XX turns)
-125;200;20;My moves are limited;Randomly disable YY% moves (XX turns);YY% of possible moves are randomly disabled (during first XX turns)
+Rid;Difficulty;Par0;Par1;Rgroup;Rname;Rdesc
+102;70;200;;I must take;Must take if I am stronger (XX turns);I must take only if my taking piece is stronger than piece taken (during first XX turns). In other cases I can take or not take
+113;80;200;;I must take;Must take (XX turns);I must take (during first XX turns). When more than one capture is available, I may capture any.
+114;100;200;;I must take;Must take weakest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture weakest target
+115;90;200;;I must take;Must take with strongest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture with my strongest piece
+116;100;200;;I must take;Take protected if stronger (XX turns);I must take only if my taking piece is stronger than piece taken and taken piece is protected (during first XX turns). In other cases I can take or not take.
+106;120;200;;I can't take;Can't capture stronger (XX turns);I cannot capture stronger pieces than my capturing piece (during first XX turns)
+108;100;200;;I can't take;Can't capture from check (XX turns);I cannot capture if I am checked and can escape without capturing (during first XX turns)
+122;90;200;;I can't take;King can't capture from check (XX turns);I cannot capture with king if I am checked and can escape without capturing (during first XX turns)
+117;140;200;;I can't take;Can't capture (XX turns);I cannot capture (during first XX turns)
+118;50;5;;I can't take;Can't capture first (XX turns);I cannot capture until you capture first of my pieces or pawns (during first XX turns)
+119;120;200;;I can't take;Can't capture unprotected (XX turns);I cannot capture your pieces, which are not protected
+120;100;200;;I can't take;Can't capture stronger protected (XX turns);I cannot capture your stronger pieces, which are protected (during first XX turns)
+121;80;200;;I can't take;Can take only weakest (XX turns);If I can capture, I have to capture smallest piece (during first XX turns)
+127;50;200;;I can't take;Can't capture with captured piece type (XX turns);I cannot capture with piece type, which was just captured by you (during first XX turns)
+128;40;200;;I can't take;Can't capture stronger piece with captured piece type (XX turns);I cannot capture stronger piece with piece type, which was just captured by you (during first XX turns)
+129;90-Y*10;200;2;I can't take;Can't capture YY times in a row (XX turns);I cannot capture if I captured in my YY previous turns (during first XX turns)
+130;80-Y*10;200;3;I can't take;Can't capture YY times in a row with same piece type (XX turns);I cannot capture if I captured with this piece type in my YY previous turns (during first XX turns)
+131;85-Y*10;200;3;I can't take;Can't capture stronger YY times in a row (XX turns);I cannot capture a stronger piece if I captured in my YY previous turns (during first XX turns)
+132;75-Y*10;200;3;I can't take;Can't capture stronger YY times in a row with same piece type (XX turns);I cannot capture a stronger piece if I captured with this piece type in my YY previous turns (during first XX turns)
+133;70-Y*10;200;3;I can't take;Can't capture YY times in a row with same piece (XX turns);I cannot capture if I captured with this piece in my YY previous turns (during first XX turns)
+136;120;200;;I can't take;Can't capture capturer (XX turns);I cannot capture your piece, which just captured my piece (during first XX turns)
+137;115;200;;I can't take;Can't capture stronger capturer (XX turns);I cannot capture your stronger piece, which just captured my piece (during first XX turns)
+138;130;200;;I can't take;Can't capture after your capture (XX turns);I cannot capture if in previous move you captured my piece (during first XX turns)
+139;125;200;;I can't take;Can't capture stronger after your capture (XX turns);I cannot capture stronger piece if in previous move you captured my piece (during first XX turns)
+140;100;200;;I can't take;Can capture only after your capture (XX turns);I can only capture if in previous move you captured my piece (during first XX turns)
+110;100-Y*20;200;1;I must prevent your attack;Remove your attack if >YY (XX turns);I have to remove your attack if more than YY pieces attack my piece (during first XX turns)
+111;130-Y*20;200;1;I must prevent your attack;Remove your attack not capture if >YY (XX turns);I have to remove your attack, but not capture your piece - if you attack my piece with more than YY pieces (during first XX turns)
+124;90-Y*10;200;1;I must prevent your attack;Can't move into >YY attacks (XX turns);I cannot move into your attack if you will attack me by more than YY pieces (during first XX turns)
+145;80-Y*10;200;1;I must prevent your attack;Can't move into >YY attacks without capture (XX turns);I cannot move into your attack if you will attack me by more than YY pieces, except if I capture (during first XX turns)
+109;100;200;;I must threaten my piece;Move into attack (XX turns);I have to move into your attack (during first XX turns)
+103;80+Y*10;10;2;My piece is locked;Move only pawns until you capture YY value (XX turns);I can move only pawns (during first XX turns) or until you capture pieces with aggregate value YY
+104;100-Y*10;200;1;My piece is locked;Can't move if attacked >YY (XX turns);I cannot move piece, which is attacked by more than YY pieces (during first XX turns)
+105;80-Y*10;200;1;My piece is locked;Move only attacked >YY (XX turns);If you attack one of my pieces with more than YY pieces, I can move only that piece (during first XX turns)
+112;90-Y*10;200;1;My piece is locked;Move only attacked >YY without capture (XX turns);If you attack one of my pieces with more than YY pieces (during first XX turns), I can move only that piece, but cannot capture
+123;110-Y*10;200;2;My piece is locked;Can move only YY random piece types (XX turns);During XX first turns YY types of pieces are selected randomly, which I can move
+126;70+Y;200;20;My piece is locked;Randomly disable YY% pieces (XX turns);YY% of possible moving pieces are randomly disabled (during first XX turns)
+134;80-Y*10;200;3;My piece is locked;Can't move same piece YY times in a row (XX turns);I cannot move the same piece YY times in a row (during first XX turns)
+135;90-Y*10;200;3;My piece is locked;Can't move same piece type YY times in a row (XX turns);I cannot move the same piece type YY times in a row (during first XX turns)
+141;90-Y*2;;6;My piece is locked;Must move each piece type every YY turns;I have to move each piece type at least once every YY turns
+142;80-Y*2;;5;My piece is locked;Must move King every YY turns;I have to move King at least once every YY turns
+143;80-Y*2;;3;My piece is locked;Must move Pawn every YY turns;I have to move Pawn at least once every YY turns
+144;80-Y*2;;5;My piece is locked;Must move Queen every YY turns;I have to move Queen at least once every YY turns
+101;100;200;;My moves are limited;Random move (XX turns);My move is replaced with a random move (during first XX turns)
+107;30;2;;My moves are limited;Pawns move only 1 square (XX turns);My pawns can move only one square (during first XX turns)
+125;60+Y;200;20;My moves are limited;Randomly disable YY% moves (XX turns);YY% of possible moves are randomly disabled (during first XX turns)
