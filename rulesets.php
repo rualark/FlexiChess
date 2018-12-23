@@ -5,6 +5,8 @@ require_once "lib/auth.php";
 
 $title = "$site_name: Rule sets";
 
+$rs_id1 = secure_variable("rs_id1");
+
 login();
 
 include "template/menu.php";
@@ -34,7 +36,13 @@ for ($i=0; $i<$n; ++$i) {
   echo "<tr>";
   echo "<td align='center'>";
   echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='play.php?rs_id0=$w[rs_id]'><img src=img/play_brown.png></a> ";
-  echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$w[rs_id]&rs_id1=$w[rs_id]'><img src=img/play_cyan.png></a>";
+  echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$w[rs_id]&rs_id1=$w[rs_id]'><img src=img/play_cyan.png></a> ";
+  if ($rs_id1) {
+    echo "<a data-toggle=tooltip data-placement=top title='Play previously selected rule set against this rule set' href='play.php?rs_id0=$w[rs_id]&rs_id1=$rs_id1'><img src=img/play_red.png></a>";
+  }
+  else {
+    echo "<a data-toggle=tooltip data-placement=top title='Play this rule set against another rule set' href='rulesets.php?rs_id1=$w[rs_id]'><img src=img/play_violet.png></a>";
+  }
   echo "</td>";
   echo "<td align='center'><a href='ruleset.php?act=view&rs_id=$w[rs_id]'>$w[rs_name]</td>";
   echo "<td align='center'>" . round($w['rs_difficulty']) . "</td>";

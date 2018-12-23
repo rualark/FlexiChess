@@ -5,6 +5,7 @@ require_once "lib/lib.php";
 require_once "lib/clib.php";
 
 $title = "$site_name: Rule set";
+
 $act = secure_variable("act");
 $rs_id = secure_variable("rs_id");
 $rs_name = secure_variable("rs_name");
@@ -104,6 +105,7 @@ else {
   echo "<p align='center'>";
   echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='play.php?rs_id0=$rs_id'><img src=img/play_brown.png></a> ";
   echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_id0=$rs_id&rs_id1=$rs_id'><img src=img/play_cyan.png></a> ";
+  echo "<a data-toggle=tooltip data-placement=top title='Play this rule set against another rule set' href='rulesets.php?rs_id1=$rs_id'><img src=img/play_violet.png></a>";
   // Cannot change ruleset of other user (only admin)
   if ($rs['u_id'] != $uid && !$ua['u_admin']) {
     $readonly = "readonly";
