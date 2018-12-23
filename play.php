@@ -33,13 +33,14 @@ echo "<div id='board' style='width: 600px'></div>\n";
 echo "<td valign='top'>";
 echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
-echo "<p><span id=status></span></p>";
+//echo "<button title='Moves history' data-html=true data-toggle=popover data-placement=bottom data-content=Content>History</button>";
+echo "<br><span id=status></span>";
+echo "<div style='line-height: 1; width: 400px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 //echo "<p>FEN: <span id=fen></span></p>";
-echo "<p>PGN: <span id=pgn></span></p>";
-echo "<p><span id=bcaptures></span></p>";
-echo "<p><span id=brules></span></p>";
-echo "<p><span id=wrules></span></p>";
-echo "<p><span id=wcaptures></span></p>";
+echo "<div style='width: 400px' id=bcaptures></div>";
+echo "<div style='line-height: 1; width: 400px; height: 200px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
+echo "<div style='line-height: 1; width: 400px; height: 200px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
+echo "<div style='width: 400px; ' id=wcaptures></div>";
 echo "</table>";
 ?>
 
@@ -1148,7 +1149,7 @@ function ShowRules() {
   hst =
     "<font color=red>" + rst2 + "</font>" +
     "<font color=orange>" + rst1 + "</font>" +
-    "<font color=blue>" + rst3 + "</font>" +
+    "<font color=#7777ff>" + rst3 + "</font>" +
     "<font color=green>" + rst0 + "</font>";
   if (game.turn() === 'b') brulesEl.html(hst);
   else wrulesEl.html(hst);
@@ -1210,9 +1211,16 @@ let updateStatus = function() {
 
   statusEl.html(status);
   fenEl.html(game.fen());
-  pgnEl.html(game.pgn());
-  bcapturesEl.html("Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
-  wcapturesEl.html("White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
+  let mypgn = game.pgn();
+  mypgn = mypgn.replace(/ ([0-9])/g,"<br>$1");
+  //pgnEl.attr('data-content', mypgn);
+  //pgnEl.popover('show');
+  pgnEl.html(mypgn);
+  let pgnSel = $('#pgn');
+  pgnSel.scrollTop(pgnSel[0].scrollHeight);
+  pgnEl.scrollTop = pgnEl.scrollHeight - pgnEl.clientHeight;
+  bcapturesEl.html("<b>Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
+  wcapturesEl.html("<b>White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
 };
 
 function RemoveDisabledMoves() {

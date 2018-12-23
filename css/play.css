@@ -18,3 +18,7 @@
   -moz-box-shadow: inset 0 0 3px 3px #aa0000;
   box-shadow: inset 0 0 3px 3px #aa0000;  
 }
+/* The max width is dependant on the container (more info below) */
+.popover{
+    max-width: 200px; /* Max Width of the popover (depending on the container!) */
+}
