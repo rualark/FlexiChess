@@ -3,13 +3,16 @@ require_once "lib/config.php";
 require_once "lib/auth.php";
 require_once "lib/lib.php";
 require_once "lib/clib.php";
+require_once "lib/Mobile_Detect.php";
+
+$mobile_detect = new Mobile_Detect;
 
 start_time();
 
 $rs_id0 = secure_variable("rs_id0");
 $rs_id1 = secure_variable("rs_id1");
 $view = secure_variable("view");
-if ($view == "mobile" || ($view == "" && is_mobile())) $show_mobile = 1;
+if ($view == "mobile" || ($view == "" && $mobile_detect->isMobile())) $show_mobile = 1;
 
 if ($rs_id0 == '') $rs_id0 = 0;
 if ($rs_id1 == '') $rs_id1 = 0;
@@ -47,7 +50,15 @@ if ($show_mobile) {
   <meta name="application-name" content="FlexiChess">
   <meta name="apple-mobile-web-app-title" content="FlexiChess">
   <meta name="msapplication-starturl" content="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=620,shrink-to-fit=no">
+  <style>
+    body {
+      overscroll-behavior-y: contain;
+      position: fixed;
+      overflow: hidden;
+      touch-action: none;
+    }
+  </style>
   <?
 }
 else {
@@ -77,6 +88,8 @@ if ($show_mobile) {
   echo "<input type='hidden' name='rs_id1' value='$rs_id1'>";
   echo "<input type='hidden' name='view' value='desktop'>";
   echo "<input type=submit value='Desktop view'></form>\n";
+  echo "<form style='display:inline;' role=search method=get action='rulesets.php' target=_blank>";
+  echo "<input type=submit value='Exit'></form>\n";
 }
 else {
   echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
@@ -85,16 +98,20 @@ else {
   echo "<input type='hidden' name='view' value='mobile'>";
   echo "<input type=submit value='Mobile view'></form>\n";
 }
+
 echo "<br><span id=status></span>";
-echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 echo "<div style='width: 400px' id=bcaptures></div>";
 echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
 echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
 echo "<div style='width: 400px; ' id=wcaptures></div>";
+echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 echo "</table>";
 ?>
 
 <script>
+document.body.addEventListener('touchmove',function(event){
+  event.preventDefault();
+});
 
 let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
 
@@ -150,19 +167,6 @@ foreach ($rla as $rid => $rl) {
     send_js_var("rpar[1][$rid][2]", $rpar[1][$rid][2]);
   }
 }
-
-/*
-echo "rpos[0][110] = 100;\n";
-echo "rpos[0][121] = 100;\n";
-echo "rpos[0][145] = 100;\n";
-echo "rpos[0][129] = 100;\n";
-echo "rpos[0][134] = 100;\n";
-echo "rpos[0][142] = 100;\n";
-echo "rpos[0][144] = 100;\n";
-echo "rpos[0][107] = 100;\n";
-echo "rpos[0][103] = 100;\n";
-echo "rpos[0][118] = 100;\n";
-*/
 
 echo "rs_id0 = $rs_id0;\n";
 echo "rs_id1 = $rs_id1;\n";
@@ -228,7 +232,7 @@ let greySquare = function(square) {
   squareEl.css('background', background);
 };
 
-let onMouseoverSquare = function(square, piece) {
+function HighlightSquares(square) {
   // exit if there are no moves available for this square
   if (posMoves.length === 0) return;
 
@@ -240,6 +244,10 @@ let onMouseoverSquare = function(square, piece) {
       greySquare(square);
     }
   }
+}
+
+let onMouseoverSquare = function(square, piece) {
+  HighlightSquares(square);
 };
 
 let onMouseoutSquare = function(square, piece) {
@@ -249,41 +257,13 @@ let onMouseoutSquare = function(square, piece) {
 // do not pick up pieces if the game is over
 // only pick up pieces for the side to move
 let onDragStart = function(source, piece, position, orientation) {
+  HighlightSquares(source);
   if (game.game_over() === true ||
       (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
       (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
     return false;
   }
 };
-
-function MakeMove(move) {
-  return game.move(move);
-}
-
-function CapturesCount(color) {
-  let cnt = 0;
-  let hist = game.history({ verbose: true });
-  for (let i=0; i<hist.length; ++i) {
-    if (hist[i].color === color && hist[i].captured != null) ++cnt;
-  }
-  return cnt;
-}
-
-function CapturesValue(color) {
-  let val = 0;
-  let hist = game.history({ verbose: true });
-  for (let i=0; i<hist.length; ++i) {
-    if (hist[i].color === color && hist[i].captured != null)
-      val += pvalue[hist[i].captured]
-  }
-  return val;
-}
-
-function Undo() {
-  game.undo();
-  board.position(game.fen());
-  updateStatus();
-}
 
 let onDrop = function(source, target) {
   removeGreySquares();
@@ -319,6 +299,35 @@ let onDrop = function(source, target) {
 let onSnapEnd = function() {
   board.position(game.fen());
 };
+
+function MakeMove(move) {
+  return game.move(move);
+}
+
+function CapturesCount(color) {
+  let cnt = 0;
+  let hist = game.history({ verbose: true });
+  for (let i=0; i<hist.length; ++i) {
+    if (hist[i].color === color && hist[i].captured != null) ++cnt;
+  }
+  return cnt;
+}
+
+function CapturesValue(color) {
+  let val = 0;
+  let hist = game.history({ verbose: true });
+  for (let i=0; i<hist.length; ++i) {
+    if (hist[i].color === color && hist[i].captured != null)
+      val += pvalue[hist[i].captured]
+  }
+  return val;
+}
+
+function Undo() {
+  game.undo();
+  board.position(game.fen());
+  updateStatus();
+}
 
 function findObjectByKey(array, key, value) {
   for (let i = 0; i < array.length; i++) {

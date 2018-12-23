@@ -1,6 +1,3 @@
-body {
-  overscroll-behavior-y: contain;
-}
 .highlight-yellow {
   -webkit-box-shadow: inset 0 0 3px 3px yellow;
   -moz-box-shadow: inset 0 0 3px 3px yellow;
