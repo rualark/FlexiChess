@@ -153,7 +153,12 @@ let board,
 ;
 
 // Possible moves
-let posMoves, posMoves2, ract;
+let posMoves, posMoves2,
+  // Active rules
+  ract,
+  // Moves disabled by each rule
+  rdis
+;
 
 let removeGreySquares = function() {
   $('#board .square-55d63').css('background', '');
@@ -295,10 +300,12 @@ function ValidateRule(rid) {
   }
   // Apply other rules
   else {
+    rdis[rid] = [];
     for (let i=0; i<posMoves.length; ++i) {
       if (posMoves[i].disabled === 1) {
         ract[rid] = 2;
         posMoves[i].disabled = 2;
+        rdis[rid].push(posMoves[i]);
       }
     }
   }
@@ -1137,7 +1144,14 @@ function ShowRules() {
     st2 = st2.replace(/YY/g, rpar[pid][rid][1]);
     st2 = st2.replace(/ZZ/g, rpar[pid][rid][2]);
     if (ract[rid] === 3) st2 += "\nThis rule tried to limit moves, but it disabled all possible moves";
-    else if (ract[rid] === 2) st2 += "\nThis rule limits current moves";
+    else if (ract[rid] === 2) {
+      let rdis_st = "";
+      for (let i=0; i<rdis[rid].length; ++i) {
+        if (rdis_st !== '') rdis_st += ', ';
+        rdis_st += rdis[rid][i].from + '-' + rdis[rid][i].to;
+      }
+      st2 += "\nThis rule limits moves: " + rdis_st;
+    }
     else if (ract[rid] === 1) st2 += "\nThis rule does not currently limit moves";
     else st2 += "\nThis rule is not active due to low possibility";
     fst = '<span title="' + st2 + '">- ' + st + '</span><br>';
@@ -1187,6 +1201,7 @@ let updateStatus = function() {
     pid = color_to_pid[game.turn()];
     pid2 = color_to_pid[game.them()];
     hist = game.history({verbose: true});
+    rdis = [];
     tnum = hist.length;
     if (hist.length > 1) {
       prelast_cap = hist[hist.length - 2].captured;
