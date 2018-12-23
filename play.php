@@ -59,6 +59,7 @@ if ($show_mobile) {
       touch-action: none;
     }
   </style>
+  <script language='JavaScript' type='text/javascript' src='js/jquery.min.js'></script>
   <?
 }
 else {
@@ -72,10 +73,10 @@ else {
 
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
-echo "<script src='js/jquery.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<script src='js/lib.js'></script>\n";
+echo "<script language='JavaScript' type='text/javascript' src='js/notify.min.js'></script>";
 echo "<table>";
 echo "<tr>";
 echo "<td valign='top'>";
@@ -116,6 +117,7 @@ document.body.addEventListener('touchmove',function(event){
 
 let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
 
+let game_id = 0;
 let MAX_RULES = 300;
 let rname = []; // Rule names
 let rdesc = []; // Rule descriptions
@@ -292,6 +294,27 @@ let onDrop = function(source, target) {
   // illegal move
   if (move === null) return 'snapback';
 
+  // Send move
+  $.ajax({
+    type: 'POST',
+    url: 'store.php',
+    data: {
+      act: 'save_move',
+      g_id: game_id,
+      u_id: <?=$uid?>,
+      fen: game.fen(),
+      pgn: game.pgn()
+    },
+    dataType: 'html',
+    success: function(data) {
+      game_id = data;
+      //$.notify("Saved game " + game_id + " state change", "success");
+    },
+    error: function (error) {
+      //$.notify(error, "error");
+    }
+  });
+
   updateStatus();
 };
 
@@ -328,25 +351,6 @@ function Undo() {
   game.undo();
   board.position(game.fen());
   updateStatus();
-}
-
-function findObjectByKey(array, key, value) {
-  for (let i = 0; i < array.length; i++) {
-    if (array[i][key] === value) {
-      return array[i];
-    }
-  }
-  return null;
-}
-
-function countObjectsByKey(array, key, value) {
-  let count = 0;
-  for (let i = 0; i < array.length; i++) {
-    if (array[i][key] === value) {
-      ++count;
-    }
-  }
-  return count;
 }
 
 function RevertRule() {
