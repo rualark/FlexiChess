@@ -773,6 +773,22 @@ var Chess = function(fen) {
     return acnt;
   }
 
+  // Count all attacks from color pieces to color2 pieces
+  function all_attacks(color, color2) {
+    let acnt = 0;
+    for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
+      /* did we run off the end of the board */
+      if (i & 0x88) { i += 7; continue; }
+
+      /* if empty square or wrong color */
+      if (board[i] == null || board[i].color !== color2) continue;
+
+      acnt += attacked(color, i);
+    }
+
+    return acnt;
+  }
+
   function king_attacked(color) {
     return attacked(swap_color(color), kings[color]);
   }
@@ -1341,6 +1357,10 @@ var Chess = function(fen) {
 
     attackedCnt: function(color, square) {
       return attackedCnt(color, SQUARES[square])
+    },
+
+    all_attacks: function(color, color2) {
+      return all_attacks(color, color2)
     },
 
     pgn: function(options) {

@@ -43,7 +43,9 @@ if ($show_mobile) {
   $rule_width = 600;
   $board_width = 600;
   ?>
+  <title><?=$title ?></title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/king.ico">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -81,7 +83,12 @@ echo "<table>";
 echo "<tr>";
 echo "<td valign='top'>";
 echo "<div id='board' style='width: {$board_width}px'></div>\n";
-if (!$show_mobile) echo "<td valign='top'>";
+if ($show_mobile) {
+  echo "<br>";
+}
+else {
+  echo "<td valign='top'>";
+}
 echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
 if ($show_mobile) {
@@ -92,6 +99,7 @@ if ($show_mobile) {
   echo "<input type=submit value='Desktop view'></form>\n";
   echo "<form style='display:inline;' role=search method=get action='rulesets.php' target=_blank>";
   echo "<input type=submit value='Exit'></form>\n";
+  echo " <span id=status></span>";
 }
 else {
   echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
@@ -99,12 +107,12 @@ else {
   echo "<input type='hidden' name='rs_id1' value='$rs_id1'>";
   echo "<input type='hidden' name='view' value='mobile'>";
   echo "<input type=submit value='Mobile view'></form>\n";
+  echo "<br><span id=status></span>";
 }
 
-echo "<br><span id=status></span>";
 echo "<div style='width: 400px' id=bcaptures></div>";
-echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
-echo "<div style='line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
+echo "<div style='padding: 2px; line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
+echo "<div style='padding: 2px; line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
 echo "<div style='width: 400px; ' id=wcaptures></div>";
 echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 echo "</table>";
@@ -154,7 +162,9 @@ foreach ($rla as $rid => $rl) {
 if ($rs_id0) apply_ruleset(0, $rs_id0);
 if ($rs_id1) apply_ruleset(1, $rs_id1);
 
-//$rpos[0][110] = 100;
+if ($rs_id0 == 0 && $rs_id1 == 0 && $uid == 1) {
+  $rpos[0][153] = 100;
+}
 
 foreach ($rla as $rid => $rl) {
   if ($rpos[0][$rid]) {
@@ -418,7 +428,23 @@ function DisableMustTakeIfStronger(rid) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     // Do not disable only if taking with stronger
-    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type] && move.piece !== 'k') continue;
+    if (tpiece && pvalue[move.piece] > pvalue[tpiece.type] &&
+      move.piece !== 'k') continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeUnprotectedOrStronger(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable if taking unprotected
+    if (tpiece && !move.chess.attackedCnt(game.them(), move.to)) continue;
+    // Do not disable if taking a stronger
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type]) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -432,7 +458,7 @@ function DisableMustTakeProtectedIfStronger(rid) {
     let tpiece = game.get(move.to);
     // Do not disable only if taking with stronger
     if (tpiece && pvalue[move.piece] > pvalue[tpiece.type] && move.piece !== 'k'
-        && game.attackedCnt(game.them(), move.to)) continue;
+        && move.chess.attackedCnt(game.them(), move.to)) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -446,6 +472,19 @@ function DisableMustTake(rid) {
     let tpiece = game.get(move.to);
     // Do not disable only if taking
     if (tpiece) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeWithPawn(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking
+    if (tpiece && move.piece === 'p') continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -466,6 +505,26 @@ function DisableMustTakeWeakest(rid) {
     let tpiece = game.get(move.to);
     // Do not disable only if taking weakest
     if (tpiece && pvalue[tpiece.type] === min_pvalue) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeStrongest(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  let max_pvalue = 0;
+  // Get minimum pvalue
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece && pvalue[tpiece.type] > max_pvalue) max_pvalue = pvalue[tpiece.type];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking strongest
+    if (tpiece && pvalue[tpiece.type] === max_pvalue) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -495,7 +554,7 @@ function DisableMustTakeWithStrongest(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[pid][rid][0] * 2) return;
   let max_pvalue = 0;
-  // Get minimum pvalue
+  // Get maximum pvalue
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
@@ -506,6 +565,26 @@ function DisableMustTakeWithStrongest(rid) {
     let tpiece = game.get(move.to);
     // Do not disable only if taking with strongest
     if (tpiece && pvalue[move.piece] === max_pvalue) continue;
+    DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMustTakeWithWeakest(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  let min_pvalue = 1000;
+  // Get maximum pvalue
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece && pvalue[move.piece] < min_pvalue) min_pvalue = pvalue[move.piece];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable only if taking with weakest
+    if (tpiece && pvalue[move.piece] === min_pvalue) continue;
     DisableMove(i);
   }
   ValidateRule(rid);
@@ -894,7 +973,7 @@ function DisableNoCaptureUnprotected(rid) {
     let tpiece = game.get(move.to);
     // Disable if capturing unprotected (except king)
     if (tpiece && move.piece !== 'k' &&
-      !game.attackedCnt(game.them(), move.to))
+      !move.chess.attackedCnt(game.them(), move.to))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -908,7 +987,7 @@ function DisableNoCaptureProtected(rid) {
     let tpiece = game.get(move.to);
     // Disable if capturing protected (except king)
     if (tpiece && move.piece !== 'k' &&
-      game.attackedCnt(game.them(), move.to))
+      move.chess.attackedCnt(game.them(), move.to))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -922,7 +1001,7 @@ function DisableNoCaptureProtectedStronger(rid) {
     let tpiece = game.get(move.to);
     // Disable if capturing protected stronger (except king)
     if (tpiece && move.piece !== 'k' && pvalue[move.piece] < pvalue[tpiece.type] &&
-      game.attackedCnt(game.them(), move.to))
+      move.chess.attackedCnt(game.them(), move.to))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1138,6 +1217,79 @@ function DisableNeedQueenMoves(rid) {
   ValidateRule(rid);
 }
 
+function DisableCreateAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except increasing attacks
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCreateAttackNotAttacked(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except increasing attacks
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()) ||
+      move.chess.attackedCnt(game.them(), move.to))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCreateAttackOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except increasing attacks
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCreateAttackByProtected(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except increasing attacks
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()) ||
+      move.chess.attackedCnt(game.turn(), move.to) <= rpar[pid][rid][1])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCreateAttackByProtectedOrCaptureStronger(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[pid][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except increasing attacks
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Do not disable if taking stronger
+    if (tpiece && pvalue[move.piece] < pvalue[tpiece.type]) continue;
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()) ||
+      move.chess.attackedCnt(game.turn(), move.to) <= rpar[pid][rid][1])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
@@ -1185,6 +1337,15 @@ function DisableMoves() {
   DisableNeedPawnMoves(143);
   DisableNeedQueenMoves(144);
   DisableCantMoveIntoAttackButCapture(145);
+  DisableCreateAttack(146);
+  DisableCreateAttack(147);
+  DisableCreateAttackByProtected(148);
+  DisableCreateAttackByProtectedOrCaptureStronger(149);
+  DisableMustTakeWithPawn(150);
+  DisableCreateAttackNotAttacked(154);
+  DisableMustTakeUnprotectedOrStronger(151);
+  DisableMustTakeStrongest(152);
+  DisableMustTakeWithWeakest(153);
 }
 
 function ChooseRules() {

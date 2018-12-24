@@ -1,5 +1,5 @@
 Rid;Difficulty;Par0;Par1;Rgroup;Rname;Rdesc
-102;70;200;;I must take;Must take if I am stronger (XX turns);I must take only if my taking piece is stronger than piece taken (during first XX turns). In other cases I can take or not take
+102;70;200;;I must take;Must take weaker (XX turns);I must take only if taken piece is weaker than my taking piece (during first XX turns). In other cases I can take or not take
 113;80;200;;I must take;Must take (XX turns);I must take (during first XX turns). When more than one capture is available, I may capture any.
 114;100;200;;I must take;Must take weakest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture weakest target
 115;90;200;;I must take;Must take with strongest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture with my strongest piece
@@ -44,3 +44,12 @@ Rid;Difficulty;Par0;Par1;Rgroup;Rname;Rdesc
 101;100;200;;My moves are limited;Random move (XX turns);My move is replaced with a random move (during first XX turns)
 107;30;2;;My moves are limited;Pawns move only 1 square (XX turns);My pawns can move only one square (during first XX turns)
 125;60+Y;200;20;My moves are limited;Randomly disable YY% moves (XX turns);YY% of possible moves are randomly disabled (during first XX turns)
+146;;200;;I must attack;I must attack (XX turns);I must increase number of attacks (during first XX turns)
+147;;200;;I must attack;I must attack or capture (XX turns);I must capture or increase number of attacks (during first XX turns)
+148;;200;0;I must attack;I must attack if protected >YY (XX turns);I must increase number of attacks if my piece moves to place by more than YY my pieces (during first XX turns)
+149;;200;0;I must attack;I must attack if protected >YY or capture stronger (XX turns);I must capture a stronger piece or increase number of attacks if my piece moves to place by more than YY my pieces (during first XX turns)
+154;;200;;I must attack;I must attack if not attacked (XX turns);I must increase number of attacks if my moved piece is not attacked (during first XX turns)
+150;;200;;I must take;Must take with pawns (XX turns);I must take with pawns (during first XX turns). When more than one capture is available, I may capture any.
+151;;200;;I must take;Must take unprotected or stonger (XX turns);I must take only if taken piece is stronger than my taking piece or if taken piece is unprotected (during first XX turns). In other cases I can take or not take
+152;;200;;I must take;Must take strongest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture strongest target
+153;;200;;I must take;Must take with weakest (XX turns);I must take (during first XX turns). When more than one capture is available, I must capture with my strongest piece
