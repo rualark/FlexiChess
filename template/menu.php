@@ -77,4 +77,4 @@ show_chatovod("artquiz");
     </div>
   </div>
 </nav>
-<script language='JavaScript' type='text/javascript' src='js/jquery.min.js'></script>
+<script language='JavaScript' type='text/javascript' src='plugin/jquery.min.js'></script>

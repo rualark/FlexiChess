@@ -61,7 +61,12 @@ if ($show_mobile) {
       touch-action: none;
     }
   </style>
-  <script language='JavaScript' type='text/javascript' src='js/jquery.min.js'></script>
+  <script language='JavaScript' type='text/javascript' src='plugin/jquery.min.js'></script>
+  <script>
+    document.body.addEventListener('touchmove',function(event){
+      event.preventDefault();
+    });
+  </script>
   <?
 }
 else {
@@ -78,9 +83,11 @@ echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<script src='js/lib.js'></script>\n";
-echo "<script language='JavaScript' type='text/javascript' src='js/notify.min.js'></script>";
+echo "<script language='JavaScript' type='text/javascript' src='plugin/notify.min.js'></script>";
 echo "<table>";
 echo "<tr>";
+echo "<td valign='top'>";
+echo "<canvas id='rating_indicator' width=5 height={$board_width}></canvas>";
 echo "<td valign='top'>";
 echo "<div id='board' style='width: {$board_width}px'></div>\n";
 if ($show_mobile) {
@@ -91,6 +98,7 @@ else {
 }
 echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
+echo "<button onclick=\"ShowHint();\">Hint</button>\n";
 if ($show_mobile) {
   echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
   echo "<input type='hidden' name='rs_id0' value='$rs_id0'>";
@@ -118,28 +126,8 @@ echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow
 echo "</table>";
 ?>
 
+<script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
 <script>
-document.body.addEventListener('touchmove',function(event){
-  event.preventDefault();
-});
-
-let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
-
-let game_id = 0;
-let MAX_RULES = 300;
-let rname = []; // Rule names
-let rdesc = []; // Rule descriptions
-let rpos = []; // Rule possibility for each player
-rpos[0] = [];
-rpos[1] = [];
-let rpar = []; // Rule parameters for each player
-rpar[0] = [];
-rpar[1] = [];
-for (let i=0; i<MAX_RULES; ++i) {
-  rpar[0][i] = [];
-  rpar[1][i] = [];
-}
-let rs_id0, rs_id1;
 
 <?php
 
@@ -184,51 +172,6 @@ foreach ($rla as $rid => $rl) {
 echo "rs_id0 = $rs_id0;\n";
 echo "rs_id1 = $rs_id1;\n";
 ?>
-
-let color_to_pid = [];
-color_to_pid['b'] = 0;
-color_to_pid['w'] = 1;
-
-// Piece values
-let pvalue = [];
-pvalue['p'] = 1;
-pvalue['b'] = 3;
-pvalue['n'] = 3;
-pvalue['r'] = 5;
-pvalue['q'] = 9;
-pvalue['k'] = 100;
-
-let board,
-  game = new Chess(),
-  boardEl = $('#board'),
-  statusEl = $('#status'),
-  brulesEl = $('#brules'),
-  wrulesEl = $('#wrules'),
-  bcapturesEl = $('#bcaptures'),
-  wcapturesEl = $('#wcaptures'),
-  fenEl = $('#fen'),
-  pgnEl = $('#pgn'),
-  // Current Player id
-  pid,
-  // Other Player id
-  pid2,
-  // Current turn number in history
-  tnum,
-  // Last captured piece in history
-  last_cap,
-  // Last captured piece in history
-  prelast_cap,
-  // History of moves
-  hist
-;
-
-// Possible moves
-let posMoves, posMoves2,
-  // Active rules
-  ract,
-  // Moves disabled by each rule
-  rdis
-;
 
 let removeGreySquares = function() {
   $('#board .square-55d63').css('background', '');
@@ -334,8 +277,47 @@ let onSnapEnd = function() {
   board.position(game.fen());
 };
 
+function eval_pos() {
+  eval_best_move.length = game.history().length;
+  evaler.send("position fen " + game.fen());
+  evaler.send("go depth " + eval_depth, function ongo(str)
+  {
+    let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
+    if (matches) {
+      eval_best_move[game.history().length] = matches[1];
+      eval_ponder[game.history().length] = matches[2];
+    }
+  }, function stream(str)
+  {
+    let matches = str.match(/depth (\d+) .*score (cp|mate) ([-\d]+) .*pv (.+)/),
+      score,
+      type,
+      depth,
+      pv,
+      data;
+
+    if (matches) {
+      depth = Number(matches[1]);
+      type = matches[2];
+      score = Number(matches[3]);
+      pv = matches[4].split(" ");
+
+      if (type === "mate") {
+        score = 100000 * score;
+      }
+      /// Convert the relative score to an absolute score.
+      if (game.turn() === "b") {
+        score *= -1;
+      }
+
+      ShowRating(score);
+    }
+  });
+}
+
 function MakeMove(move) {
-  return game.move(move);
+  let result = game.move(move);
+  return result;
 }
 
 function CapturesCount(color) {
@@ -358,9 +340,10 @@ function CapturesValue(color) {
 }
 
 function Undo() {
-  game.undo();
+  let result = game.undo();
   board.position(game.fen());
   updateStatus();
+  return result;
 }
 
 function RevertRule() {
@@ -1428,6 +1411,7 @@ function ShowRules() {
 }
 
 let updateStatus = function() {
+  eval_pos();
   let status = '';
 
   let moveColor = 'White';
@@ -1523,6 +1507,7 @@ function RandomMove() {
 // Highlight possible moves
 function HighlightPosMoves() {
   boardEl.find('.highlight-red').removeClass('highlight-red');
+  boardEl.find('.highlight-green').removeClass('highlight-green');
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.disabled) continue;
@@ -1541,6 +1526,211 @@ let cfg = {
 };
 board = ChessBoard('board', cfg);
 
+function load_engine()
+{
+  let worker = new Worker("js/stockfish/stockfish.js"),
+    engine = {started: Date.now()},
+    que = [];
+
+  function get_first_word(line)
+  {
+    let space_index = line.indexOf(" ");
+
+    /// If there are no spaces, send the whole line.
+    if (space_index === -1) {
+      return line;
+    }
+    return line.substr(0, space_index);
+  }
+
+  function determine_que_num(line, que)
+  {
+    let cmd_type,
+      first_word = get_first_word(line),
+      cmd_first_word,
+      i,
+      len;
+
+    if (first_word === "uciok" || first_word === "option") {
+      cmd_type = "uci"
+    } else if (first_word === "readyok") {
+      cmd_type = "isready";
+    } else if (first_word === "bestmove" || first_word === "info") {
+      cmd_type = "go";
+    } else {
+      /// eval and d are more difficult.
+      cmd_type = "other";
+    }
+
+    len = que.length;
+
+    for (i = 0; i < len; i += 1) {
+      cmd_first_word = get_first_word(que[i].cmd);
+      if (cmd_first_word === cmd_type || (cmd_type === "other" && (cmd_first_word === "d" || cmd_first_word === "eval"))) {
+        return i;
+      }
+    }
+
+    /// Not sure; just go with the first one.
+    return 0;
+  }
+
+  worker.onmessage = function (e)
+  {
+    let line = e.data,
+      done,
+      que_num = 0,
+      my_que;
+
+    if (debugging) console.log(e.data);
+
+    /// Stream everything to this, even invalid lines.
+    if (engine.stream) {
+      engine.stream(line);
+    }
+
+    /// Ignore invalid setoption commands since valid ones do not repond.
+    if (line.substr(0, 14) === "No such option") {
+      return;
+    }
+
+    que_num = determine_que_num(line, que);
+
+    my_que = que[que_num];
+
+    if (!my_que) {
+      return;
+    }
+
+    if (my_que.stream) {
+      my_que.stream(line);
+    }
+
+    if (typeof my_que.message === "undefined") {
+      my_que.message = "";
+    } else if (my_que.message !== "") {
+      my_que.message += "\n";
+    }
+
+    my_que.message += line;
+
+    /// Try to determine if the stream is done.
+    if (line === "uciok") {
+      /// uci
+      done = true;
+      engine.loaded = true;
+    } else if (line === "readyok") {
+      /// isready
+      done = true;
+      engine.ready = true;
+    } else if (line.substr(0, 8) === "bestmove") {
+      /// go [...]
+      done = true;
+      /// All "go" needs is the last line (use stream to get more)
+      my_que.message = line;
+    } else if (my_que.cmd === "d" && line.substr(0, 15) === "Legal uci moves") {
+      done = true;
+    } else if (my_que.cmd === "eval" && /Total Evaluation[\s\S]+\n$/.test(my_que.message)) {
+      done = true;
+    } else if (line.substr(0, 15) === "Unknown command") {
+      done = true;
+    }
+    ///NOTE: Stockfish.js does not support the "debug" or "register" commands.
+    ///TODO: Add support for "perft", "bench", and "key" commands.
+    ///TODO: Get welcome message so that it does not get caught with other messages.
+    ///TODO: Prevent (or handle) multiple messages from different commands
+    ///      E.g., "go depth 20" followed later by "uci"
+
+    if (done) {
+      if (my_que.cb && !my_que.discard) {
+        my_que.cb(my_que.message);
+      }
+    }
+  };
+
+  engine.send = function send(cmd, cb, stream)
+  {
+    cmd = String(cmd).trim();
+
+    /// Can't quit. This is a browser.
+    ///TODO: Destroy the engine.
+    if (cmd === "quit") {
+      return;
+    }
+
+    if (debugging) {
+      console.log(cmd);
+    }
+
+    /// Only add a que for commands that always print.
+    ///NOTE: setoption may or may not print a statement.
+    if (cmd !== "ucinewgame" && cmd !== "flip" && cmd !== "stop" && cmd !== "ponderhit" && cmd.substr(0, 8) !== "position"  && cmd.substr(0, 9) !== "setoption") {
+      que[que.length] = {
+        cmd: cmd,
+        cb: cb,
+        stream: stream
+      };
+    }
+    worker.postMessage(cmd);
+  };
+
+  engine.stop_moves = function stop_moves()
+  {
+    let i,
+      len = que.length;
+
+    for (i = 0; i < len; i += 1) {
+      if (debugging) {
+        console.log(i, get_first_word(que[i].cmd))
+      }
+      /// We found a move that has not been stopped yet.
+      if (get_first_word(que[i].cmd) === "go" && !que[i].discard) {
+        engine.send("stop");
+        que[i].discard = true;
+      }
+    }
+  };
+
+  engine.get_cue_len = function get_cue_len()
+  {
+    return que.length;
+  };
+
+  return engine;
+}
+
+function ShowRating(rating) {
+  let canvas = document.getElementById("rating_indicator");
+  let ctx = canvas.getContext("2d");
+  let pos = rating * canvas.height / 3000 + canvas.height / 2;
+  if (pos > canvas.height - 1) pos = canvas.height - 1;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, 5, canvas.height - pos);
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+  ctx.lineTo(5, canvas.height / 2);
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#ff0000';
+  ctx.stroke();
+  canvas.title = rating / 100;
+}
+
+function ShowHint() {
+  boardEl.find('.highlight-red').removeClass('highlight-red');
+  boardEl.find('.highlight-green').removeClass('highlight-green');
+  let from = eval_best_move[game.history().length].substr(0, 2);
+  let to = eval_best_move[game.history().length].substr(2, 2);
+  boardEl.find('.square-' + from).addClass('highlight-green');
+  boardEl.find('.square-' + to).addClass('highlight-green');
+  window.setTimeout(HighlightPosMoves, 1500);
+}
+
+function init_evaler() {
+  evaler = load_engine();
+  evaler.send("uci");
+}
+
+init_evaler();
 updateStatus();
 </script>
 
