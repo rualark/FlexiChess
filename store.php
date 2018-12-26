@@ -5,16 +5,16 @@ require_once "lib/lib.php";
 $act = secure_variable("act");
 $u_id = secure_variable("u_id");
 $g_id = secure_variable("g_id");
-$rs_id0 = secure_variable("rs_id0");
-$rs_id1 = secure_variable("rs_id1");
+$rs_b = secure_variable("rs_b");
+$rs_w = secure_variable("rs_w");
 $pgn = secure_variable("pgn");
 $fen = secure_variable("fen");
 
 if ($act == "save_move") {
   if ($g_id == 0) {
     // Start game
-    $q = "INSERT INTO games (u_id,rs_id0,rs_id1,time_started,time_changed,fen,pgn) 
-      VALUES ('$u_id', '$rs_id0', '$rs_id1', NOW(), NOW(), \"$fen\", \"$pgn\")";
+    $q = "INSERT INTO games (u_id,rs_b,rs_w,time_started,time_changed,fen,pgn) 
+      VALUES ('$u_id', '$rs_b', '$rs_w', NOW(), NOW(), \"$fen\", \"$pgn\")";
     mysqli_query($ml,$q);
     echo mysqli_error($ml);
     echo mysqli_insert_id($ml);

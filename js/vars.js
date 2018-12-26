@@ -3,6 +3,8 @@ let eval_depth = 12;
 let eval_best_move = [];
 let eval_ponder = [];
 
+let engine = [];
+
 let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
 
 let game_id = 0;
@@ -10,16 +12,16 @@ let MAX_RULES = 300;
 let rname = []; // Rule names
 let rdesc = []; // Rule descriptions
 let rpos = []; // Rule possibility for each player
-rpos[0] = [];
-rpos[1] = [];
+rpos['b'] = [];
+rpos['w'] = [];
 let rpar = []; // Rule parameters for each player
-rpar[0] = [];
-rpar[1] = [];
+rpar['b'] = [];
+rpar['w'] = [];
 for (let i=0; i<MAX_RULES; ++i) {
-  rpar[0][i] = [];
-  rpar[1][i] = [];
+  rpar['b'][i] = [];
+  rpar['w'][i] = [];
 }
-let rs_id0, rs_id1;
+let rs_b, rs_w;
 
 let color_to_pid = [];
 color_to_pid['b'] = 0;
@@ -46,11 +48,6 @@ let board,
   wcapturesEl = $('#wcaptures'),
   fenEl = $('#fen'),
   pgnEl = $('#pgn'),
-  // Current Player id
-  pid,
-  // Other Player id
-  pid2,
-  // Current turn number in history
   tnum,
   // Last captured piece in history
   last_cap,
