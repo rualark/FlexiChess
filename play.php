@@ -127,6 +127,7 @@ echo "</table>";
 ?>
 
 <script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
+<script language='JavaScript' type='text/javascript' src='js/stockfish_engine.js'></script>
 <script>
 
 <?php
@@ -147,11 +148,11 @@ foreach ($rla as $rid => $rl) {
   $rpar['w'][$rid][2] = $rl['Par2'];
 }
 
-if ($rs_b) apply_ruleset(0, $rs_b);
-if ($rs_w) apply_ruleset(1, $rs_w);
+if ($rs_b) apply_ruleset('b', $rs_b);
+if ($rs_w) apply_ruleset('w', $rs_w);
 
 if ($rs_b == 0 && $rs_w == 0 && $uid == 1) {
-  $rpos['b'][153] = 100;
+  //$rpos['b'][153] = 100;
 }
 
 foreach ($rla as $rid => $rl) {
@@ -278,6 +279,7 @@ let onSnapEnd = function() {
 };
 
 function eval_pos() {
+  if (!evaler) return;
   eval_best_move.length = game.history().length;
   evaler.send("position fen " + game.fen());
   evaler.send("go depth " + eval_depth, function ongo(str)
@@ -315,6 +317,44 @@ function eval_pos() {
   });
 }
 
+function stockfish_go(color) {
+  if (!engine[game.turn()]) return;
+  engine[game.turn()].state = 'Running';
+  engine[game.turn()].send("position fen " + game.fen());
+  engine[game.turn()].mpv = [];
+  engine[game.turn()].send("go depth " + engine[game.turn()].depth, function ongo(str)
+  {
+    let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
+    if (matches) {
+      engine[game.turn()].best_move[game.history().length] = matches[1];
+      engine[game.turn()].ponder[game.history().length] = matches[2];
+      console.log("updating status");
+      updateStatus();
+      console.log("switching to wait");
+      engine[game.turn()].state = 'Wait';
+    }
+  }, function stream(str)
+  {
+    let matches = str.match(/depth (\d+) .*score (cp|mate) ([-\d]+) .*pv (.+)/),
+      score,
+      type,
+      depth,
+      pv,
+      data;
+    if (!matches) return;
+    depth = Number(matches[1]);
+    // Wrong depth
+    if (depth != engine[game.turn()].depth) return;
+    type = matches[2];
+    score = Number(matches[3]);
+    pv = matches[4].split(" ");
+    if (type === "mate") {
+      score = 100000 * score;
+    }
+    engine[game.turn()].mpv[pv[0]] = score;
+  });
+}
+
 function MakeMove(move) {
   let result = game.move(move);
   return result;
@@ -340,6 +380,12 @@ function CapturesValue(color) {
 }
 
 function Undo() {
+  if (engine[game.turn()] && engine[game.turn()].state !== 'Wait') {
+    engine[game.turn()].send("stop");
+    window.setTimeout(Undo, 100);
+    return;
+  }
+  console.log("Starting undo");
   let result = game.undo();
   board.position(game.fen());
   updateStatus();
@@ -817,11 +863,9 @@ function DisableCantMultiMoveSame(rid) {
     let tpiece = game.get(move.to);
     let found = 1;
     // Check first previous move
-    console.log("Check 1");
     if (move.from !== hist[hist.length - 2].to) continue;
     // Check if all previous moves form chain
     for (let i=1; i<rpar[game.turn()][rid][1] - 1 ; ++i) {
-      console.log("Check 2");
       if (hist[hist.length - 2 - i * 2].to !== hist[hist.length - i * 2].from) {
         found = 0;
         break;
@@ -1273,9 +1317,51 @@ function DisableCreateAttackByProtectedOrCaptureStronger(rid) {
   ValidateRule(rid);
 }
 
+function DisableStockfish(rid) {
+  if (!ract[rid]) return;
+  let from = engine[game.turn()].best_move[game.history().length].substr(0, 2);
+  let to = engine[game.turn()].best_move[game.history().length].substr(2, 2);
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.from !== from || move.to !== to)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableStockfishAvailable(rid) {
+  if (!ract[rid]) return;
+  let best_score = -100000;
+  let best_move = '';
+  console.log(engine[game.turn()].mpv);
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.disabled) continue;
+    let score = engine[game.turn()].mpv[move.from + move.to];
+    if (typeof score === 'undefined') {
+      console.log("Move " + move.from + move.to + " not found");
+      score = -100000000 - Math.random() * 100000;
+    }
+    if (score > best_score) {
+      best_score = score;
+      best_move = move.from + move.to;
+    }
+  }
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (best_move !== move.from + move.to)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
+  DisableStockfish(156);
   DisableNoCaptureFromCheck(108);
   DisableMustTakeIfStronger(102);
   DisableCantMoveIfAttacked(104);
@@ -1329,6 +1415,7 @@ function DisableMoves() {
   DisableMustTakeUnprotectedOrStronger(151);
   DisableMustTakeStrongest(152);
   DisableMustTakeWithWeakest(153);
+  DisableStockfishAvailable(160);
 }
 
 function ChooseRules() {
@@ -1411,6 +1498,12 @@ function ShowRules() {
 }
 
 let updateStatus = function() {
+  if (engine[game.turn()]) {
+    if (engine[game.turn()].state === 'Wait') {
+      stockfish_go();
+      return;
+    }
+  }
   eval_pos();
   let status = '';
 
@@ -1524,205 +1617,6 @@ let cfg = {
 };
 board = ChessBoard('board', cfg);
 
-function load_engine()
-{
-  let err_prob = 0,
-    max_err = 0;
-  let worker = new Worker("js/stockfish/stockfish.js"),
-    engine = {started: Date.now()},
-    que = [];
-
-  function get_first_word(line)
-  {
-    let space_index = line.indexOf(" ");
-
-    /// If there are no spaces, send the whole line.
-    if (space_index === -1) {
-      return line;
-    }
-    return line.substr(0, space_index);
-  }
-
-  function determine_que_num(line, que)
-  {
-    let cmd_type,
-      first_word = get_first_word(line),
-      cmd_first_word,
-      i,
-      len;
-
-    if (first_word === "uciok" || first_word === "option") {
-      cmd_type = "uci"
-    } else if (first_word === "readyok") {
-      cmd_type = "isready";
-    } else if (first_word === "bestmove" || first_word === "info") {
-      cmd_type = "go";
-    } else {
-      /// eval and d are more difficult.
-      cmd_type = "other";
-    }
-
-    len = que.length;
-
-    for (i = 0; i < len; i += 1) {
-      cmd_first_word = get_first_word(que[i].cmd);
-      if (cmd_first_word === cmd_type || (cmd_type === "other" && (cmd_first_word === "d" || cmd_first_word === "eval"))) {
-        return i;
-      }
-    }
-
-    /// Not sure; just go with the first one.
-    return 0;
-  }
-
-  worker.onmessage = function (e)
-  {
-    let line = e.data,
-      done,
-      que_num = 0,
-      my_que;
-
-    if (debugging) console.log(e.data);
-
-    /// Stream everything to this, even invalid lines.
-    if (engine.stream) {
-      engine.stream(line);
-    }
-
-    /// Ignore invalid setoption commands since valid ones do not repond.
-    if (line.substr(0, 14) === "No such option") {
-      return;
-    }
-
-    que_num = determine_que_num(line, que);
-
-    my_que = que[que_num];
-
-    if (!my_que) {
-      return;
-    }
-
-    if (my_que.stream) {
-      my_que.stream(line);
-    }
-
-    if (typeof my_que.message === "undefined") {
-      my_que.message = "";
-    } else if (my_que.message !== "") {
-      my_que.message += "\n";
-    }
-
-    my_que.message += line;
-
-    /// Try to determine if the stream is done.
-    if (line === "uciok") {
-      /// uci
-      done = true;
-      engine.loaded = true;
-    } else if (line === "readyok") {
-      /// isready
-      done = true;
-      engine.ready = true;
-    } else if (line.substr(0, 8) === "bestmove") {
-      /// go [...]
-      done = true;
-      /// All "go" needs is the last line (use stream to get more)
-      my_que.message = line;
-    } else if (my_que.cmd === "d" && line.substr(0, 15) === "Legal uci moves") {
-      done = true;
-    } else if (my_que.cmd === "eval" && /Total Evaluation[\s\S]+\n$/.test(my_que.message)) {
-      done = true;
-    } else if (line.substr(0, 15) === "Unknown command") {
-      done = true;
-    }
-    ///NOTE: Stockfish.js does not support the "debug" or "register" commands.
-    ///TODO: Add support for "perft", "bench", and "key" commands.
-    ///TODO: Get welcome message so that it does not get caught with other messages.
-    ///TODO: Prevent (or handle) multiple messages from different commands
-    ///      E.g., "go depth 20" followed later by "uci"
-
-    if (done) {
-      if (my_que.cb && !my_que.discard) {
-        my_que.cb(my_que.message);
-      }
-    }
-  };
-
-  engine.send = function send(cmd, cb, stream)
-  {
-    cmd = String(cmd).trim();
-
-    /// Can't quit. This is a browser.
-    ///TODO: Destroy the engine.
-    if (cmd === "quit") {
-      return;
-    }
-
-    if (debugging) {
-      console.log(cmd);
-    }
-
-    /// Only add a que for commands that always print.
-    ///NOTE: setoption may or may not print a statement.
-    if (cmd !== "ucinewgame" && cmd !== "flip" && cmd !== "stop" && cmd !== "ponderhit" && cmd.substr(0, 8) !== "position"  && cmd.substr(0, 9) !== "setoption") {
-      que[que.length] = {
-        cmd: cmd,
-        cb: cb,
-        stream: stream
-      };
-    }
-    worker.postMessage(cmd);
-  };
-
-  engine.stop_moves = function stop_moves()
-  {
-    let i,
-      len = que.length;
-
-    for (i = 0; i < len; i += 1) {
-      if (debugging) {
-        console.log(i, get_first_word(que[i].cmd))
-      }
-      /// We found a move that has not been stopped yet.
-      if (get_first_word(que[i].cmd) === "go" && !que[i].discard) {
-        engine.send("stop");
-        que[i].discard = true;
-      }
-    }
-  };
-
-  engine.get_cue_len = function get_cue_len()
-  {
-    return que.length;
-  };
-
-  engine.set_level = function set_level(level)
-  {
-    if (level < 0) {
-      level = 0;
-    }
-    if (level > 20) {
-      level = 20;
-    }
-
-    engine.send("setoption name Skill Level value " + level);
-
-    ///NOTE: Stockfish level 20 does not make errors (intentially), so these numbers have no effect on level 20.
-    /// Level 0 starts at 1
-    err_prob = Math.round((level * 6.35) + 1);
-    /// Level 0 starts at 5
-    max_err = Math.round((level * -0.25) + 5);
-
-    engine.send("setoption name Skill Level Maximum Error value " + max_err);
-    engine.send("setoption name Skill Level Probability value " + err_prob);
-
-    ///NOTE: Could clear the hash to make the player more like it's brand new.
-    /// player.engine.send("setoption name Clear Hash");
-  };
-
-  return engine;
-}
-
 function ShowRating(rating) {
   let canvas = document.getElementById("rating_indicator");
   let ctx = canvas.getContext("2d");
@@ -1752,18 +1646,37 @@ function ShowHint() {
 function init_evaler() {
   evaler = load_engine();
   evaler.send("uci");
-  evaler.send("setoption name MultiPV value 200");
-  evaler.set_level(1);
+  evaler.set_level(20);
+  //evaler.send("setoption name MultiPV value 200");
 }
 
-function init_engine(color, level, depth) {
+function init_engine(color) {
+  let level;
+  let depth;
+  if (rpos[color][156]) depth = rpar[color][156][1];
+  if (rpos[color][157]) depth = rpar[color][157][1];
+  if (rpos[color][158]) depth = rpar[color][158][1];
+  if (rpos[color][159]) depth = rpar[color][159][1];
+  if (rpos[color][160]) depth = rpar[color][160][1];
+  if (!depth) return;
   engine[color] = load_engine();
   engine[color].send("uci");
-  engine[color].set_level(1);
   engine[color].depth = depth;
+  if (rpos[color][156]) {
+    level = rpar[color][156][2];
+  }
+  else {
+    level = 20;
+  }
+  engine[color].set_level(level);
+  if (rpos[color][157] || rpos[color][159] || rpos[color][160]) {
+    engine[color].send("setoption name MultiPV value 200");
+  }
 }
 
-init_evaler();
+//init_evaler();
+init_engine('b');
+init_engine('w');
 updateStatus();
 </script>
 

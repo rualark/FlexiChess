@@ -53,7 +53,8 @@ Type;Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 ;101;100;999;;;My moves are limited;Random move (XX turns);My move is replaced with a random move (during first XX turns)
 ;107;30;2;;;My moves are limited;Pawns move only 1 square (XX turns);My pawns can move only one square (during first XX turns)
 ;125;60+Y;999;20;;My moves are limited;Randomly disable YY% moves (XX turns);YY% of possible moves are randomly disabled (during first XX turns)
-;156;0;;16;20;Stockfish;Stockfish best move (depth YY, skill ZZ);Best available move is chosen by Stockfish algorithm with depth YY and skill ZZ (possible values 0-20)
-;157;0;;16;5;Stockfish;Stockfish ZZ best moves (depth YY);Only ZZ best available moves are allowed by Stockfish algorithm (depth YY)
+;156;0;;16;20;Stockfish;Stockfish best move (depth YY, skill ZZ);Best move is chosen by Stockfish algorithm with depth YY and skill ZZ (possible values 0-20)
+;160;0;;12;20;Stockfish;Stockfish best available move (depth YY);Best available move is chosen by Stockfish algorithm with depth YY
+;157;0;;12;5;Stockfish;Stockfish ZZ best moves (depth YY);Only ZZ best available moves are allowed by Stockfish algorithm (depth YY)
 ;158;100+YY*3;;16;;Stockfish;Prohibit stockfish best move (depth YY);I cannot use best available move, which is selected by Stockfish algorithm (depth YY)
-;159;ZZ/3+YY*3;;16;300;Stockfish;Prohibit stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating
+;159;ZZ/3+YY*3;;12;300;Stockfish;Prohibit stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating

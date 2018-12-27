@@ -16,7 +16,7 @@ function load_rules() {
   }
 }
 
-function apply_ruleset($pid, $rs_id) {
+function apply_ruleset($color, $rs_id) {
   GLOBAL $ml, $prw, $rpos, $rpar;
   // Load rules
   $r = mysqli_query($ml,
@@ -27,11 +27,11 @@ function apply_ruleset($pid, $rs_id) {
   for ($i=0; $i<$n; ++$i) {
     $w = mysqli_fetch_assoc($r);
     $rid = $w['r_id'];
-    $prw[$pid][$rid] = $w;
-    $rpos[$pid][$rid] = $w['r_poss'];
-    $rpar[$pid][$rid][0] = $w['r_par0'];
-    $rpar[$pid][$rid][1] = $w['r_par1'];
-    $rpar[$pid][$rid][2] = $w['r_par2'];
+    $prw[$color][$rid] = $w;
+    $rpos[$color][$rid] = $w['r_poss'];
+    $rpar[$color][$rid][0] = $w['r_par0'];
+    $rpar[$color][$rid][1] = $w['r_par1'];
+    $rpar[$color][$rid][2] = $w['r_par2'];
   }
 }
 
