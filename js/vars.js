@@ -36,7 +36,7 @@ pvalue['r'] = 5;
 pvalue['q'] = 9;
 pvalue['k'] = 100;
 
-let debugging = 1;
+let debugging = 0;
 
 let board,
   game = new Chess(),

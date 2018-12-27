@@ -328,9 +328,7 @@ function stockfish_go(color) {
     if (matches) {
       engine[game.turn()].best_move[game.history().length] = matches[1];
       engine[game.turn()].ponder[game.history().length] = matches[2];
-      console.log("updating status");
       updateStatus();
-      console.log("switching to wait");
       engine[game.turn()].state = 'Wait';
     }
   }, function stream(str)
@@ -385,7 +383,6 @@ function Undo() {
     window.setTimeout(Undo, 100);
     return;
   }
-  console.log("Starting undo");
   let result = game.undo();
   board.position(game.fen());
   updateStatus();
@@ -1159,7 +1156,6 @@ function DisableNeedMovesEachPieceType(rid) {
   for (let pt_id in ptypes) {
     let found = 0;
     for (let i=0; i<rpar[game.turn()][rid][1]; ++i) {
-      console.log(i, hist[hist.length - 2 - i * 2].piece, pt_id, ptypes[pt_id], ptneed.length);
       if (hist[hist.length - 2 - i * 2].piece === ptypes[pt_id]) {
         found = 1;
         break;
@@ -1168,7 +1164,6 @@ function DisableNeedMovesEachPieceType(rid) {
     if (found) continue;
     ptneed.push(ptypes[pt_id]);
   }
-  console.log(ptneed, ptneed.length);
   // No needed piece types
   if (!ptneed.length) return;
   // Disable all moves except needed
@@ -1176,7 +1171,6 @@ function DisableNeedMovesEachPieceType(rid) {
     let move = posMoves[i];
     let found = 0;
     for (let pt_id in ptneed) {
-      console.log(move.piece, ptneed[pt_id]);
       if (move.piece === ptneed[pt_id]) found = 1;
     }
     if (!found) DisableMove(i);
@@ -1674,7 +1668,7 @@ function init_engine(color) {
   }
 }
 
-//init_evaler();
+init_evaler();
 init_engine('b');
 init_engine('w');
 updateStatus();
