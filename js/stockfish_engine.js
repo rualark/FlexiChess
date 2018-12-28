@@ -6,6 +6,7 @@ function load_engine()
       ponder: [],
       best_move: [],
       mpv: [],
+      mpv2: [],
       depth: 0,
       err_prob: 0,
       max_err: 0,

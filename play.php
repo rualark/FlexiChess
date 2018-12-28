@@ -322,6 +322,7 @@ function stockfish_go(color) {
   engine[game.turn()].state = 'Running';
   engine[game.turn()].send("position fen " + game.fen());
   engine[game.turn()].mpv = [];
+  engine[game.turn()].mpv2 = [];
   engine[game.turn()].send("go depth " + engine[game.turn()].depth, function ongo(str)
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
@@ -350,6 +351,7 @@ function stockfish_go(color) {
       score = 100000 * score;
     }
     engine[game.turn()].mpv[pv[0]] = score;
+    engine[game.turn()].mpv2.push({score: score, move: pv[0]});
   });
 }
 
@@ -1311,6 +1313,48 @@ function DisableCreateAttackByProtectedOrCaptureStronger(rid) {
   ValidateRule(rid);
 }
 
+function DisableNotBestStockfish(rid) {
+  if (!ract[rid]) return;
+  let from = engine[game.turn()].best_move[game.history().length].substr(0, 2);
+  let to = engine[game.turn()].best_move[game.history().length].substr(2, 2);
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.from === from && move.to === to)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNotBestStockfishNoBlunder(rid) {
+  if (!ract[rid]) return;
+  console.log(engine[game.turn()].mpv);
+  let best_score = engine[game.turn()].mpv2[0].score;
+  // At least one move is needed above margin_score
+  let margin_score = best_score - rpar[game.turn()][rid][2];
+  // This is last move which will be allowed
+  let last_score = engine[game.turn()].mpv2[0];
+  // Find worst move, which is still not worse than best - rpar
+  for (let i=1; i<engine[game.turn()].mpv2.length; ++i) {
+    if (engine[game.turn()].mpv2[i].score > margin_score)
+      last_score = engine[game.turn()].mpv2[i];
+  }
+  console.log(last_score);
+  // Disable all moves above margin_score
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.disabled) continue;
+    let score = engine[game.turn()].mpv[move.from + move.to];
+    if (typeof score === 'undefined') {
+    }
+    else {
+      if (score > last_score.score)
+        DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
 function DisableStockfish(rid) {
   if (!ract[rid]) return;
   let from = engine[game.turn()].best_move[game.history().length].substr(0, 2);
@@ -1355,7 +1399,9 @@ function DisableStockfishAvailable(rid) {
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
+  DisableNotBestStockfish(158);
   DisableStockfish(156);
+  DisableNotBestStockfishNoBlunder(159);
   DisableNoCaptureFromCheck(108);
   DisableMustTakeIfStronger(102);
   DisableCantMoveIfAttacked(104);
