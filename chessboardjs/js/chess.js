@@ -1255,6 +1255,7 @@ var Chess = function(fen) {
     ROOK: ROOK,
     QUEEN: QUEEN,
     KING: KING,
+    board: board,
     SQUARES: (function() {
                 /* from the ECMA-262 spec (section 12.6.4):
                  * "The mechanics of enumerating the properties ... is

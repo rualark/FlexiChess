@@ -83,6 +83,7 @@ echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
 echo "<script src='js/lib.js'></script>\n";
+echo "<script src='js/simple-chess-ai.js'></script>\n";
 echo "<script language='JavaScript' type='text/javascript' src='plugin/notify.min.js'></script>";
 echo "<table>";
 echo "<tr>";
@@ -1396,10 +1397,25 @@ function DisableStockfishAvailable(rid) {
   ValidateRule(rid);
 }
 
+// Simple chess AI
+function DisableSCA(rid) {
+  if (!ract[rid]) return;
+  let best_move = minimaxRoot(rpar[game.turn()][rid][1], game, true);
+  console.log("Positions: " + sca_positionCount);
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.san !== best_move)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
   DisableNotBestStockfish(158);
+  DisableSCA(161);
   DisableStockfish(156);
   DisableNotBestStockfishNoBlunder(159);
   DisableNoCaptureFromCheck(108);
