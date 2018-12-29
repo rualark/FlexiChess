@@ -1400,8 +1400,22 @@ function DisableStockfishAvailable(rid) {
 // Simple chess AI
 function DisableSCA(rid) {
   if (!ract[rid]) return;
+  sca_eval_effect = 1;
   let best_move = minimaxRoot(rpar[game.turn()][rid][1], game, true);
-  console.log("Positions: " + sca_positionCount);
+  // Disable all moves except Stockfish best move
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (move.san !== best_move)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+// Simple chess AI with negative position effect
+function DisableSCANegativeEffect(rid) {
+  if (!ract[rid]) return;
+  sca_eval_effect = -1;
+  let best_move = minimaxRoot(rpar[game.turn()][rid][1], game, true);
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -1416,6 +1430,7 @@ function DisableMoves() {
   // Then run checks that disable moves
   DisableNotBestStockfish(158);
   DisableSCA(161);
+  DisableSCANegativeEffect(162);
   DisableStockfish(156);
   DisableNotBestStockfishNoBlunder(159);
   DisableNoCaptureFromCheck(108);

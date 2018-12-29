@@ -59,3 +59,4 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 158;100+YY*3;;12;;Stockfish;Prohibit Stockfish best move (depth YY);I cannot use best available move, which is selected by Stockfish algorithm (depth YY)
 159;ZZ/3+YY*3;;10;300;Stockfish;Prohibit Stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating
 161;0;;2;;Simple chess AI;SimpleChessAI best move (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY
+162;0;;2;;Simple chess AI;SimpleChessAI best move bad position (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY (bad positions are preferred)

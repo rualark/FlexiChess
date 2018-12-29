@@ -1,4 +1,5 @@
 let sca_positionCount = 0;
+let sca_eval_effect = 1;
 
 let minimaxRoot = function(depth, game, isMaximisingPlayer) {
 
@@ -16,7 +17,7 @@ let minimaxRoot = function(depth, game, isMaximisingPlayer) {
       bestMoveFound = newGameMove;
       //console.log(bestMove, bestMoveFound);
     }
-    console.log(newGameMove, value);
+    //console.log(newGameMove, value);
   }
   return bestMoveFound;
 };
@@ -155,17 +156,17 @@ let getPieceValue = function (piece, x, y) {
   }
   let getAbsoluteValue = function (piece, isWhite, x ,y) {
     if (piece.type === 'p') {
-      return 10 + ( isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x] );
+      return 10 + sca_eval_effect * ( isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x] );
     } else if (piece.type === 'r') {
-      return 50 + ( isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x] );
+      return 50 + sca_eval_effect * ( isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x] );
     } else if (piece.type === 'n') {
-      return 30 + knightEval[y][x];
+      return 30 + sca_eval_effect * knightEval[y][x];
     } else if (piece.type === 'b') {
-      return 30 + ( isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x] );
+      return 30 + sca_eval_effect * ( isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x] );
     } else if (piece.type === 'q') {
-      return 90 + evalQueen[y][x];
+      return 90 + sca_eval_effect * evalQueen[y][x];
     } else if (piece.type === 'k') {
-      return 900 + ( isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x] );
+      return 900 + sca_eval_effect * ( isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x] );
     }
     throw "Unknown piece type: " + piece.type;
   };
