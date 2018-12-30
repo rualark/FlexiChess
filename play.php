@@ -309,12 +309,14 @@ function eval_pos(turn, color) {
       score = Number(matches[3]);
       pv = matches[4].split(" ");
 
-      if (type === "mate") {
-        score = 100000 * score;
-      }
-      /// Convert the relative score to an absolute score.
+      // Convert the relative score to an absolute score.
       if (eval_color === "b") {
         score *= -1;
+      }
+      eval_score_st = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
+      if (type === "mate") {
+        eval_score_st = "mate in " + Math.abs(score);
+        score = 100000 * score;
       }
 
       eval_cur_depth = depth;
@@ -324,6 +326,7 @@ function eval_pos(turn, color) {
       eval_cur_depth = depth;
       eval_best_score[eval_turn] = score;
       ShowPgn();
+      ShowStatus();
     }
   });
 }
@@ -1679,7 +1682,6 @@ let updateStatus = function() {
     }
   }
   eval_pos(game.history().length, game.turn());
-  let status = '';
 
   let moveColor = 'White';
   if (game.turn() === 'b') {
@@ -1688,20 +1690,20 @@ let updateStatus = function() {
 
   // checkmate?
   if (game.in_checkmate() === true) {
-    status = 'Game over, ' + moveColor + ' is in checkmate.';
+    game_status = 'Game over, ' + moveColor + ' is in checkmate.';
   }
 
   // draw?
   else if (game.in_draw() === true) {
-    status = 'Game over, drawn position';
+    game_status = 'Game over, drawn position';
   }
 
   // game still on
   else {
-    status = moveColor + ' to move';
+    game_status = moveColor + ' to move';
     // check?
     if (game.in_check() === true) {
-      status += ', ' + moveColor + ' is in check';
+      game_status += ', ' + moveColor + ' is in check';
     }
     // Get maximum moves
     posMoves = game.moves({
@@ -1731,7 +1733,7 @@ let updateStatus = function() {
     window.setTimeout(function() {AutoMove(game.turn())}, 500);
   }
 
-  statusEl.html(status);
+  ShowStatus();
   fenEl.html(game.fen());
   //pgnEl.attr('data-content', mypgn);
   //pgnEl.popover('show');
@@ -1739,6 +1741,13 @@ let updateStatus = function() {
   bcapturesEl.html("<b>Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
   wcapturesEl.html("<b>White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
 };
+
+function ShowStatus() {
+  let st = game_status;
+  if (typeof eval_score_st != 'undefined' && eval_score_st != '')
+    st += " (" + eval_score_st + ")";
+  statusEl.html(st);
+}
 
 function GetMoveHtml(i, hist) {
   let st = "";
@@ -1870,7 +1879,7 @@ function ShowRating(rating) {
   ctx.lineWidth = 4;
   ctx.strokeStyle = '#ff0000';
   ctx.stroke();
-  canvas.title = rating / 100;
+  canvas.title = eval_score_st;
 }
 
 function ShowProgress() {

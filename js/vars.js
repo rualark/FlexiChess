@@ -1,3 +1,4 @@
+let game_status = '';
 let engine_eval;
 let eval_depth = 12;
 let eval_best_move = [];
@@ -7,6 +8,7 @@ let eval_ponder = [];
 let eval_turn = 0;
 let eval_color = 'w';
 let eval_chess;
+let eval_score_st;
 let ana_chess;
 let ana_turn = 0;
 let ana_color = 'w';
