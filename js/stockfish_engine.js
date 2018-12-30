@@ -1,4 +1,4 @@
-function load_engine()
+function load_engine(ename)
 {
   let worker = new Worker("js/stockfish/stockfish.js"),
     engine = {
@@ -8,10 +8,12 @@ function load_engine()
       mpv: [],
       mpv2: [],
       depth: 0,
+      cur_depth: 0,
       err_prob: 0,
       max_err: 0,
       state: 'Wait',
-      level: 0
+      level: 0,
+      ename: ename
     },
     que = [];
 
@@ -65,7 +67,7 @@ function load_engine()
       que_num = 0,
       my_que;
 
-    if (debugging) console.log(e.data);
+    //if (debugging) console.log(e.data);
 
     /// Stream everything to this, even invalid lines.
     if (engine.stream) {
@@ -142,7 +144,7 @@ function load_engine()
     }
 
     if (debugging) {
-      console.log(cmd);
+      console.log(engine.ename + ": " + cmd);
     }
 
     /// Only add a que for commands that always print.
@@ -164,7 +166,7 @@ function load_engine()
 
     for (i = 0; i < len; i += 1) {
       if (debugging) {
-        console.log(i, get_first_word(que[i].cmd))
+        //console.log(i, get_first_word(que[i].cmd))
       }
       /// We found a move that has not been stopped yet.
       if (get_first_word(que[i].cmd) === "go" && !que[i].discard) {

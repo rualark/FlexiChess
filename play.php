@@ -29,18 +29,19 @@ $r = mysqli_query($ml,
     LEFT JOIN users USING (u_id) 
     WHERE rs_id='$rs_b'");
 echo mysqli_error($ml);
-$rs0 = mysqli_fetch_assoc($r);
+$rsb = mysqli_fetch_assoc($r);
 // Load ruleset
 $r = mysqli_query($ml,
   "SELECT * FROM rulesets
     LEFT JOIN users USING (u_id) 
     WHERE rs_id='$rs_w'");
 echo mysqli_error($ml);
-$rs1 = mysqli_fetch_assoc($r);
+$rsw = mysqli_fetch_assoc($r);
 
 if ($show_mobile) {
   $rule_height = 100;
   $rule_width = 600;
+  $pgn_height = 50;
   $board_width = 600;
   ?>
   <title><?=$title ?></title>
@@ -75,8 +76,10 @@ else {
   echo "<div class=container>";
   $rule_height = 200;
   $rule_width = 400;
+  $pgn_height = 100;
   $board_width = 600;
 }
+$board_width_padded = $board_width - 5;
 
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
@@ -88,9 +91,13 @@ echo "<script language='JavaScript' type='text/javascript' src='plugin/notify.mi
 echo "<table>";
 echo "<tr>";
 echo "<td valign='top'>";
-echo "<canvas id='rating_indicator' width=5 height={$board_width}></canvas>";
+echo "<canvas id='rating_indicator' width=5 height={$board_width_padded}></canvas>";
 echo "<td valign='top'>";
+echo "<table><tr><td>";
 echo "<div id='board' style='width: {$board_width}px'></div>\n";
+echo "<tr><td>";
+echo "<canvas style='display: block;' id='progress' width={$board_width_padded} height=4></canvas>";
+echo "</table>";
 if ($show_mobile) {
   echo "<br>";
 }
@@ -123,7 +130,7 @@ echo "<div style='width: 400px' id=bcaptures></div>";
 echo "<div style='padding: 2px; line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; background-color: black; border:1px solid black' id=brules></div>";
 echo "<div style='padding: 2px; line-height: 1; width: {$rule_width}px; height: {$rule_height}px; overflow-y: scroll; border:1px solid black' id=wrules></div>";
 echo "<div style='width: 400px; ' id=wcaptures></div>";
-echo "<div style='line-height: 1; width: {$rule_width}px; height: 50px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
+echo "<div style='line-height: 1; width: {$rule_width}px; height: {$pgn_height}px; overflow-y: scroll; border:1px solid black' id=pgn></div>";
 echo "</table>";
 ?>
 
@@ -215,6 +222,13 @@ let onMouseoutSquare = function(square, piece) {
 // do not pick up pieces if the game is over
 // only pick up pieces for the side to move
 let onDragStart = function(source, piece, position, orientation) {
+  if (engine_eval.state === 'Running' ||
+    engine_ana.state === 'Running' ||
+    engine['b'] === 'Running' ||
+    engine['w'] === 'Running'
+  ) {
+    return false;
+  }
   HighlightSquares(source);
   if (game.game_over() === true ||
       (game.turn() === 'w' && piece.search(/^b/) !== -1) ||
@@ -239,38 +253,16 @@ let onDrop = function(source, target) {
   // illegal move
   if (!found) return 'snapback';
 
-  // see if the move is legal
-  let move = MakeMove({
+  let chess = new Chess(game.fen());
+  let move = {
     from: source,
     to: target,
     promotion: 'q' // NOTE: always promote to a queen for example simplicity
-  });
+  };
+  // see if the move is legal
+  if (chess.move(move) === null) return 'snapback';
 
-  // illegal move
-  if (move === null) return 'snapback';
-
-  // Send move
-  $.ajax({
-    type: 'POST',
-    url: 'store.php',
-    data: {
-      act: 'save_move',
-      g_id: game_id,
-      u_id: <?=$uid?>,
-      fen: game.fen(),
-      pgn: game.pgn()
-    },
-    dataType: 'html',
-    success: function(data) {
-      game_id = data;
-      //$.notify("Saved game " + game_id + " state change", "success");
-    },
-    error: function (error) {
-      //$.notify(error, "error");
-    }
-  });
-
-  updateStatus();
+  MakeMove(move, 0);
 };
 
 // update the board position after the piece snap
@@ -279,19 +271,31 @@ let onSnapEnd = function() {
   board.position(game.fen());
 };
 
-function eval_pos() {
-  if (!evaler) return;
-  eval_best_move.length = game.history().length;
-  evaler.send("position fen " + game.fen());
-  evaler.send("go depth " + eval_depth, function ongo(str)
+function eval_pos(turn, color) {
+  if (!engine_eval) return;
+  engine_eval.state = 'Running';
+  eval_turn = turn;
+  eval_color = color;
+  eval_chess = new Chess(game.fen());
+  if (debugging) console.log("Called eval_pos with: ", eval_turn, eval_color);
+  eval_best_move.length = eval_turn + 1;
+  eval_best_score.length = eval_turn + 1;
+  eval_afterbest_score.length = eval_turn;
+  engine_eval.send("stop");
+  engine_eval.send("position fen " + game.fen());
+  engine_eval.send("go depth " + eval_depth, function ongo(str)
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
-      eval_best_move[game.history().length] = matches[1];
-      eval_ponder[game.history().length] = matches[2];
+      eval_chess.move({from: matches[1].substr(0, 2), to: matches[1].substr(2, 2), promotion: 'q'});
+      eval_best_move[eval_turn] = eval_chess.history({ verbose: true })[eval_chess.history().length - 1];
+      eval_ponder[eval_turn] = matches[2];
+      if (debugging) console.log("Score eval: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), eval_turn)
+      engine_eval.state = 'Wait';
     }
   }, function stream(str)
   {
+    if (debugging) console.log("Eval: " + str);
     let matches = str.match(/depth (\d+) .*score (cp|mate) ([-\d]+) .*pv (.+)/),
       score,
       type,
@@ -309,11 +313,69 @@ function eval_pos() {
         score = 100000 * score;
       }
       /// Convert the relative score to an absolute score.
-      if (game.turn() === "b") {
+      if (eval_color === "b") {
         score *= -1;
       }
 
+      eval_cur_depth = depth;
+      ShowProgress();
       ShowRating(score);
+      //if (depth != engine_eval.depth) return;
+      eval_cur_depth = depth;
+      eval_best_score[eval_turn] = score;
+      ShowPgn();
+    }
+  });
+}
+
+function analyse_move(move, turn, color) {
+  if (!engine_ana) return;
+  engine_ana.state = 'Running';
+  if (debugging) console.log("Called analyse_move with: ", move, turn, color);
+  ana_turn = turn;
+  ana_color = color;
+  ana_chess = new Chess(game.fen());
+  eval_afterbest_score.length = ana_turn;
+  let result = ana_chess.move(move);
+  engine_ana.send("stop");
+  engine_ana.send("position fen " + ana_chess.fen());
+  engine_ana.send("go depth " + eval_depth, function ongo(str)
+  {
+    let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
+    if (matches) {
+      engine_ana.state = 'Wait';
+    }
+  }, function stream(str)
+  {
+    if (debugging) console.log("Ana: " + str);
+    let matches = str.match(/depth (\d+) .*score (cp|mate) ([-\d]+) .*pv (.+)/),
+      score,
+      type,
+      depth,
+      pv,
+      data;
+
+    if (matches) {
+      depth = Number(matches[1]);
+      type = matches[2];
+      score = Number(matches[3]);
+      pv = matches[4].split(" ");
+
+      if (type === "mate") {
+        score = 100000 * score;
+      }
+      /// Convert the relative score to an absolute score.
+      if (ana_color === "w") {
+        score *= -1;
+      }
+
+      //if (depth != engine_ana.depth) return;
+      ana_cur_depth = depth;
+      ShowProgress();
+      ana_cur_depth = depth;
+      eval_afterbest_score[ana_turn] = score;
+      if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
+      ShowPgn();
     }
   });
 }
@@ -343,6 +405,8 @@ function stockfish_go(color) {
       data;
     if (!matches) return;
     depth = Number(matches[1]);
+    engine[game.turn()].cur_depth = depth;
+    ShowProgress();
     // Wrong depth
     if (depth != engine[game.turn()].depth) return;
     type = matches[2];
@@ -356,8 +420,43 @@ function stockfish_go(color) {
   });
 }
 
-function MakeMove(move) {
+function MakeMove(move, updateBoard) {
+  if (engine_eval.state === 'Running' ||
+    engine_ana.state === 'Running' ||
+    engine['b'] === 'Running' ||
+    engine['w'] === 'Running'
+  ) {
+    if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
+    window.setTimeout(function () {
+      MakeMove(move, updateBoard)
+    }, 100);
+    return;
+  }
+  analyse_move(eval_best_move[game.history().length], game.history().length, game.turn());
   let result = game.move(move);
+  // Send move
+  $.ajax({
+    type: 'POST',
+    url: 'store.php',
+    data: {
+      act: 'save_move',
+      g_id: game_id,
+      u_id: <?=$uid?>,
+      fen: game.fen(),
+      pgn: game.pgn()
+    },
+    dataType: 'html',
+    success: function(data) {
+      game_id = data;
+      //$.notify("Saved game " + game_id + " state change", "success");
+    },
+    error: function (error) {
+      //$.notify(error, "error");
+    }
+  });
+  if (updateBoard) board.position(game.fen());
+  removeGreySquares();
+  updateStatus();
   return result;
 }
 
@@ -381,15 +480,19 @@ function CapturesValue(color) {
 }
 
 function Undo() {
-  if (engine[game.turn()] && engine[game.turn()].state !== 'Wait') {
-    engine[game.turn()].send("stop");
+  if (engine_eval.state === 'Running' ||
+    engine_ana.state === 'Running' ||
+    engine['b'] === 'Running' ||
+    engine['w'] === 'Running'
+  ) {
+    if (debugging) console.log("Undo is waiting until stockfish finishes");
     window.setTimeout(Undo, 100);
     return;
   }
   let result = game.undo();
   board.position(game.fen());
   updateStatus();
-  return result;
+  return;
 }
 
 function RevertRule() {
@@ -1329,7 +1432,7 @@ function DisableNotBestStockfish(rid) {
 
 function DisableNotBestStockfishNoBlunder(rid) {
   if (!ract[rid]) return;
-  console.log(engine[game.turn()].mpv);
+  if (debugging) console.log(engine[game.turn()].mpv);
   let best_score = engine[game.turn()].mpv2[0].score;
   // At least one move is needed above margin_score
   let margin_score = best_score - rpar[game.turn()][rid][2];
@@ -1340,7 +1443,7 @@ function DisableNotBestStockfishNoBlunder(rid) {
     if (engine[game.turn()].mpv2[i].score > margin_score)
       last_score = engine[game.turn()].mpv2[i];
   }
-  console.log(last_score);
+  if (debugging) console.log(last_score);
   // Disable all moves above margin_score
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -1373,14 +1476,14 @@ function DisableStockfishAvailable(rid) {
   if (!ract[rid]) return;
   let best_score = -100000;
   let best_move = '';
-  console.log(engine[game.turn()].mpv);
+  if (debugging) console.log(engine[game.turn()].mpv);
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.disabled) continue;
     let score = engine[game.turn()].mpv[move.from + move.to];
     if (typeof score === 'undefined') {
-      console.log("Move " + move.from + move.to + " not found");
+      if (debugging) console.log("Move " + move.from + move.to + " not found");
       score = -100000000 - Math.random() * 100000;
     }
     if (score > best_score) {
@@ -1542,7 +1645,7 @@ function ShowRules() {
   else wst = hst;
   rst = "<font color=white>Black rule set: ";
   if (rs_b) {
-    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_b?>&act=view><font color=white><?=$rs0['rs_name']?></font></a>";
+    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_b?>&act=view><font color=white><?=$rsb['rs_name']?></font></a>";
   }
   else {
     rst += "None";
@@ -1551,7 +1654,7 @@ function ShowRules() {
   bst = rst + bst;
   rst = "White rule set: ";
   if (rs_w) {
-    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_w?>&act=view><font color=black><?=$rs1['rs_name']?></font></a>";
+    rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_w?>&act=view><font color=black><?=$rsw['rs_name']?></font></a>";
   }
   else {
     rst += "None";
@@ -1571,11 +1674,11 @@ function ShowRules() {
 let updateStatus = function() {
   if (engine[game.turn()]) {
     if (engine[game.turn()].state === 'Wait') {
-      stockfish_go();
+      stockfish_go(game.turn());
       return;
     }
   }
-  eval_pos();
+  eval_pos(game.history().length, game.turn());
   let status = '';
 
   let moveColor = 'White';
@@ -1630,17 +1733,86 @@ let updateStatus = function() {
 
   statusEl.html(status);
   fenEl.html(game.fen());
-  let mypgn = game.pgn();
-  mypgn = mypgn.replace(/ ([0-9])/g,"<br>$1");
   //pgnEl.attr('data-content', mypgn);
   //pgnEl.popover('show');
-  pgnEl.html(mypgn);
-  let pgnSel = $('#pgn');
-  pgnSel.scrollTop(pgnSel[0].scrollHeight);
-  pgnEl.scrollTop = pgnEl.scrollHeight - pgnEl.clientHeight;
+  ShowPgn();
   bcapturesEl.html("<b>Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
   wcapturesEl.html("<b>White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
 };
+
+function GetMoveHtml(i, hist) {
+  let st = "";
+  let hcolor;
+  let comment;
+  let move_type = 0;
+  let delta = 0;
+  let sign = 1;
+  if (i % 2 === 1) sign = -1;
+  if (typeof eval_afterbest_score[i] !== 'undefined' &&
+    typeof eval_best_score[i + 1] !== 'undefined') {
+    delta = sign * (eval_afterbest_score[i] - eval_best_score[i + 1]);
+    if (delta > 300) move_type = 4;
+    else if (delta > 100) move_type = 3;
+    else if (delta > 50) move_type = 2;
+    else move_type = 1;
+  }
+  if (move_type === 4) {
+    hcolor="#ff5555";
+    comment = "Blunder (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
+  }
+  else if (move_type === 3) {
+    hcolor="#ffbb55";
+    comment = "Mistake (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
+  }
+  else if (move_type === 2) {
+    hcolor="#ffff00";
+    comment = "Inaccuracy (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
+  }
+  else if (move_type === 1) {
+    hcolor="#99ff99";
+    if (eval_best_move[i].san == hist[i].san) {
+      comment = "Best move";
+    }
+    else {
+      comment = "Good move (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
+    }
+  }
+  else if (move_type === 0) {
+    hcolor="#ffffff";
+    comment = '';
+  }
+  st += "<td title='" + comment + "' bgcolor=" + hcolor + ">&nbsp;";
+  st += hist[i].san;
+  st += "&nbsp;";
+  return st;
+}
+
+function ShowPgn() {
+  let mypgn = "";
+  let hist = game.history({ verbose: true });
+  let turn = hist.length;
+  mypgn = "<table>";
+  for (let i=0; i<turn; ++i) {
+    if (i % 2 === 1) continue;
+    if (typeof eval_best_move[i] === 'undefined') continue;
+    mypgn += "<tr><td>" + Math.floor((i / 2) + 1) + ".";
+    mypgn += GetMoveHtml(i, hist);
+    if (i<turn - 1) {
+      mypgn += GetMoveHtml(i + 1, hist);
+    }
+    else mypgn += "<td>";
+    mypgn += "<td>&nbsp; best: &nbsp;";
+    mypgn += "<td>&nbsp;" + eval_best_move[i].san + "&nbsp;";
+    if (i<turn - 1) {
+      mypgn += "<td>&nbsp;" + eval_best_move[i + 1].san + "&nbsp;";
+    }
+  }
+  mypgn += "</table>";
+  pgnEl.html(mypgn);
+  // Scroll to bottom
+  let pgnSel = $('#pgn');
+  pgnSel.scrollTop(pgnSel[0].scrollHeight);
+}
 
 function RemoveDisabledMoves() {
   posMoves2 = [];
@@ -1660,10 +1832,7 @@ function AutoMove(color) {
 
 function RandomMove() {
   let randomIndex = Math.floor(Math.random() * posMoves2.length);
-  MakeMove(posMoves2[randomIndex]);
-  board.position(game.fen());
-  removeGreySquares();
-  updateStatus();
+  MakeMove(posMoves2[randomIndex], 1);
 }
 
 // Highlight possible moves
@@ -1704,21 +1873,51 @@ function ShowRating(rating) {
   canvas.title = rating / 100;
 }
 
+function ShowProgress() {
+  let canvas = document.getElementById("progress");
+  let ctx = canvas.getContext("2d");
+  let pos1 = canvas.width * eval_cur_depth / engine_eval.depth;
+  let pos2 = canvas.width * ana_cur_depth / engine_ana.depth;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#999999";
+  ctx.fillRect(0, 0, pos1, 1);
+  ctx.fillRect(0, 1, pos2, 2);
+  if (engine['b']) {
+    let pos3 = canvas.width * engine['b'].cur_depth / engine['b'].depth;
+    //ctx.fillStyle = "#ff0000";
+    ctx.fillRect(0, 2, pos3, 3);
+  }
+  if (engine['w']) {
+    let pos3 = canvas.width * engine['w'].cur_depth / engine['w'].depth;
+    //ctx.fillStyle = "#00ff00";
+    ctx.fillRect(0, 3, pos3, 4);
+  }
+}
+
 function ShowHint() {
   boardEl.find('.highlight-red').removeClass('highlight-red');
   boardEl.find('.highlight-green').removeClass('highlight-green');
-  let from = eval_best_move[game.history().length].substr(0, 2);
-  let to = eval_best_move[game.history().length].substr(2, 2);
+  let from = eval_best_move[game.history().length].from;
+  let to = eval_best_move[game.history().length].to;
   boardEl.find('.square-' + from).addClass('highlight-green');
   boardEl.find('.square-' + to).addClass('highlight-green');
   window.setTimeout(HighlightPosMoves, 1500);
 }
 
-function init_evaler() {
-  evaler = load_engine();
-  evaler.send("uci");
-  evaler.set_level(20);
-  //evaler.send("setoption name MultiPV value 200");
+function init_engine_eval() {
+  engine_eval = load_engine("Eval");
+  engine_eval.depth = eval_depth;
+  engine_eval.send("uci");
+  engine_eval.set_level(20);
+  //engine_eval.send("setoption name MultiPV value 200");
+}
+
+function init_engine_ana() {
+  engine_ana = load_engine("Ana");
+  engine_ana.depth = eval_depth;
+  engine_ana.send("uci");
+  engine_ana.set_level(20);
+  //engine_eval.send("setoption name MultiPV value 200");
 }
 
 function init_engine(color) {
@@ -1730,7 +1929,7 @@ function init_engine(color) {
   if (rpos[color][159]) depth = rpar[color][159][1];
   if (rpos[color][160]) depth = rpar[color][160][1];
   if (!depth) return;
-  engine[color] = load_engine();
+  engine[color] = load_engine(color);
   engine[color].send("uci");
   engine[color].depth = depth;
   if (rpos[color][156]) {
@@ -1745,7 +1944,8 @@ function init_engine(color) {
   }
 }
 
-init_evaler();
+init_engine_eval();
+init_engine_ana();
 init_engine('b');
 init_engine('w');
 updateStatus();

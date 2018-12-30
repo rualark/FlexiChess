@@ -1309,6 +1309,10 @@ var Chess = function(fen) {
       return moves;
     },
 
+    move_to_san: function(move) {
+      return move_to_san(move);
+    },
+
     in_check: function() {
       return in_check();
     },

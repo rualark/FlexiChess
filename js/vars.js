@@ -1,7 +1,17 @@
-let evaler;
+let engine_eval;
 let eval_depth = 12;
 let eval_best_move = [];
+let eval_best_score = [];
+let eval_afterbest_score = [];
 let eval_ponder = [];
+let eval_turn = 0;
+let eval_color = 'w';
+let eval_chess;
+let ana_chess;
+let ana_turn = 0;
+let ana_color = 'w';
+let ana_cur_depth = 0;
+let eval_cur_depth = 0;
 
 let engine = [];
 
