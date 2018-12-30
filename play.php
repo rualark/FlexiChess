@@ -1895,6 +1895,7 @@ function ShowProgress() {
 }
 
 function ShowHint() {
+  if (typeof eval_best_move[game.history().length] === 'undefined') return;
   boardEl.find('.highlight-red').removeClass('highlight-red');
   boardEl.find('.highlight-green').removeClass('highlight-green');
   let from = eval_best_move[game.history().length].from;
