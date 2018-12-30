@@ -68,9 +68,9 @@ let board,
 ;
 
 // Possible moves
-let posMoves, posMoves2,
-  // Active rules
-  ract,
-  // Moves disabled by each rule
-  rdis
-;
+let posMoves = [];
+let posMoves2 = [];
+// Active rules
+let ract = [];
+// Moves disabled by each rule
+let rdis = [];
