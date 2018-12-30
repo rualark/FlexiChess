@@ -56,7 +56,7 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 156;0;;12;20;Stockfish;Stockfish best move (depth YY, skill ZZ);Best move is chosen by Stockfish algorithm with depth YY and skill ZZ (possible values 0-20)
 160;0;;10;20;Stockfish;Stockfish best available move (depth YY);Best available move is chosen by Stockfish algorithm with depth YY
 157;0;;10;5;Stockfish;Stockfish ZZ best moves (depth YY);Only ZZ best available moves are allowed by Stockfish algorithm (depth YY)
-158;100+YY*3;;12;;Stockfish;Prohibit Stockfish best move (depth YY);I cannot use best available move, which is selected by Stockfish algorithm (depth YY)
-159;ZZ/3+YY*3;;10;300;Stockfish;Prohibit Stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating
+158;100+Y*3;;12;;Stockfish;Prohibit Stockfish best move (depth YY);I cannot use best available move, which is selected by Stockfish algorithm (depth YY)
+159;Z/3+Y*3;;10;300;Stockfish;Prohibit Stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating
 161;0;;2;;Simple chess AI;SimpleChessAI best move (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY
 162;0;;2;;Simple chess AI;SimpleChessAI best move bad position (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY (bad positions are preferred)
