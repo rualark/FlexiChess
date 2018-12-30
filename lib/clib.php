@@ -9,9 +9,14 @@ function load_rules() {
   $fname = "rules/rules.csv";
   echo $rdb->Open($fname);
   echo $rdb->Select();
+  $rid_loaded = array();
   for ($i=0; $i<count($rdb->result); ++$i) {
     $rl = $rdb->result[$i];
     $rid = $rl['Rid'];
+    if ($rid_loaded[$rid]) {
+      echo "<font color='red'>Error: duplicate rule id $rid: $rid_loaded[$rid]</font><br>";
+    }
+    ++$rid_loaded[$rid];
     $rla[$rid] = $rdb->result[$i];
   }
 }

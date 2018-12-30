@@ -13,8 +13,8 @@ $fen = secure_variable("fen");
 if ($act == "save_move") {
   if ($g_id == 0) {
     // Start game
-    $q = "INSERT INTO games (u_id,rs_b,rs_w,time_started,time_changed,fen,pgn) 
-      VALUES ('$u_id', '$rs_b', '$rs_w', NOW(), NOW(), \"$fen\", \"$pgn\")";
+    $q = "INSERT INTO games (u_id,rs_b,rs_w,time_started,time_changed,fen,pgn,ip,ip_forwarded) 
+      VALUES ('$u_id', '$rs_b', '$rs_w', NOW(), NOW(), \"$fen\", \"$pgn\", '$_SERVER[REMOTE_ADDR]', '$_SERVER[HTTP_X_FORWARDED_FOR]')";
     mysqli_query($ml,$q);
     echo mysqli_error($ml);
     echo mysqli_insert_id($ml);
