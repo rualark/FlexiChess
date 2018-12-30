@@ -36,6 +36,7 @@ if ($act == "save") {
     if ($_POST["pos$rid"] == 100) ++$rcount100;
     $diff += get_difficulty($rid, $_POST["pos$rid"], $_POST["xx$rid"], $_POST["yy$rid"], $_POST["zz$rid"]);
   }
+  $rs_name = str_replace('"', "'", $rs_name);
   if (!$rs_id) {
     $r = mysqli_query($ml,
       "INSERT INTO rulesets 
@@ -164,7 +165,7 @@ function show_edit_ruleset() {
   echo "<table cellpadding='3'>";
   echo "<tr>";
   echo "<td>";
-  echo "<b>Rule set name:</b> <input $readonly placeholder='Enter descriptive rule set name' pattern='.{10,}' required title='10 characters minimum' class='form-control' style='width: 800px' type=text id=rs_name name=rs_name value='$rs[rs_name]'>";
+  echo "<b>Rule set name:</b> <input $readonly placeholder='Enter descriptive rule set name' pattern='.{10,}' required title='10 characters minimum' class='form-control' style='width: 800px' type=text id=rs_name name=rs_name value=\"$rs[rs_name]\">";
   echo "<tr>";
   echo "<td>";
   if ($readonly == "readonly") {
