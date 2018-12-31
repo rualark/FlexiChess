@@ -161,7 +161,7 @@ function GetMoveHtml(i) {
   }
   else if (eval_best_move[i].san == hist[i].san) {
     hcolor="#99ff99";
-    comment = "Best move";
+    comment = "Best move (" + eval_best_score[i + 1] + " " + eval_afterbest_score[i] + ")";
   }
   else if (move_type === 4) {
     hcolor="#ff5555";
@@ -285,6 +285,10 @@ function eval_pos(turn, color) {
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
+      if (matches[1] === "(none)" && typeof eval_best_score[eval_turn] === 'undefined') {
+        if (eval_color === 'b') eval_best_score[eval_turn] = 100000;
+        else eval_best_score[eval_turn] = -100000;
+      }
       eval_chess.move({from: matches[1].substr(0, 2), to: matches[1].substr(2, 2), promotion: 'q'});
       eval_best_move[eval_turn] = eval_chess.history({ verbose: true })[eval_chess.history().length - 1];
       eval_chess.undo();
@@ -296,6 +300,7 @@ function eval_pos(turn, color) {
       engine_eval.state = 'Wait';
       ShowRating(eval_best_score[cur_move + 1], eval_score_st[cur_move + 1]);
       ShowStatus();
+      ShowPgn();
     }
   }, function stream(str)
   {
@@ -320,15 +325,12 @@ function eval_pos(turn, color) {
       eval_score_st[eval_turn] = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
       if (type === "mate") {
         eval_score_st[eval_turn] = "mate in " + Math.abs(score);
-        score = 100000 * score;
+        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
       }
 
       eval_cur_depth = depth;
       ShowProgress();
-      eval_cur_depth = depth;
       eval_best_score[eval_turn] = score;
-      if (depth != engine_eval.depth) return;
-      ShowPgn();
     }
   });
 }
@@ -344,11 +346,18 @@ function analyse_move(turn, color) {
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
+      if (debugging) console.log("Best move: " + matches[1]);
+      if (matches[1] === "(none)" && typeof eval_afterbest_score[ana_turn] === 'undefined') {
+        if (ana_color === 'b') eval_afterbest_score[ana_turn] = 100000;
+        else eval_afterbest_score[ana_turn] = -100000;
+      }
       ana_chess.undo();
       ana_chess.move(hist[eval_turn]);
       eval_chess.move(hist[eval_turn]);
       eval_pos(eval_turn + 1, eval_chess.turn());
       engine_ana.state = 'Wait';
+      ShowPgn();
+      ShowStatus();
     }
   }, function stream(str)
   {
@@ -367,7 +376,7 @@ function analyse_move(turn, color) {
       pv = matches[4].split(" ");
 
       if (type === "mate") {
-        score = 100000 * score;
+        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
       }
       /// Convert the relative score to an absolute score.
       if (ana_color === "b") {
@@ -377,11 +386,9 @@ function analyse_move(turn, color) {
       //if (depth != engine_ana.depth) return;
       ana_cur_depth = depth;
       ShowProgress();
-      ana_cur_depth = depth;
       eval_afterbest_score[ana_turn] = score;
-      if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
       if (depth != engine_ana.depth) return;
-      ShowPgn();
+      if (debugging) console.log("Score: ", score, eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
     }
   });
 }
@@ -434,6 +441,7 @@ init_engine_eval();
 init_engine_ana();
 eval_pos(0, eval_chess.turn());
 ShowPgn();
+ShowStatus();
 
 $(document).ready(function(){
   $('[data-toggle="popover"]').popover();
@@ -443,6 +451,13 @@ $(document).ready(function(){
 
 echo "<a class='btn btn-primary' href='startplay.php?move_color=$move_color&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'>Continue game</a> ";
 echo "<button class='btn btn-disabled' data-html=true data-toggle=popover title='PGN' data-content='<pre>$w[pgn]'>Show PGN</button> ";
+
+echo "<br><br>";
+echo "<b>User:</b> $w[u_name]<br>";
+echo "<b>Black rule set:</b> <a href='ruleset.php?act=view&rs_id=$w[rs_b]'>$w[rsb_name]</a><br>";
+echo "<b>White rule set:</b> <a href='ruleset.php?act=view&rs_id=$w[rs_w]'>$w[rsw_name]</a><br>";
+echo "<b>Game started:</b> $w[time_started]<br>";
+echo "<b>Last move:</b> $w[time_changed]<br>";
 
 include "template/footer.php";
 ?>

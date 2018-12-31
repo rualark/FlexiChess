@@ -300,11 +300,17 @@ function eval_pos(turn, color) {
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
+      if (matches[1] === "(none)" && typeof eval_best_score[eval_turn] === 'undefined') {
+        if (eval_color === 'b') eval_best_score[eval_turn] = 100000;
+        else eval_best_score[eval_turn] = -100000;
+      }
       eval_chess.move({from: matches[1].substr(0, 2), to: matches[1].substr(2, 2), promotion: 'q'});
       eval_best_move[eval_turn] = eval_chess.history({ verbose: true })[eval_chess.history().length - 1];
       eval_ponder[eval_turn] = matches[2];
       if (debugging) console.log("Score eval: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), eval_turn)
       engine_eval.state = 'Wait';
+      ShowPgn();
+      ShowStatus();
     }
   }, function stream(str)
   {
@@ -329,7 +335,7 @@ function eval_pos(turn, color) {
       eval_score_st[eval_turn] = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
       if (type === "mate") {
         eval_score_st[eval_turn] = "mate in " + Math.abs(score);
-        score = 100000 * score;
+        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
       }
 
       eval_cur_depth = depth;
@@ -338,8 +344,6 @@ function eval_pos(turn, color) {
       //if (depth != engine_eval.depth) return;
       eval_cur_depth = depth;
       eval_best_score[eval_turn] = score;
-      ShowPgn();
-      ShowStatus();
     }
   });
 }
@@ -359,6 +363,10 @@ function analyse_move(move, turn, color) {
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
+      if (matches[1] === "(none)" && typeof eval_afterbest_score[ana_turn] === 'undefined') {
+        if (ana_color === 'w') eval_afterbest_score[ana_turn] = 100000;
+        else eval_afterbest_score[ana_turn] = -100000;
+      }
       engine_ana.state = 'Wait';
     }
   }, function stream(str)
@@ -378,7 +386,7 @@ function analyse_move(move, turn, color) {
       pv = matches[4].split(" ");
 
       if (type === "mate") {
-        score = 100000 * score;
+        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
       }
       /// Convert the relative score to an absolute score.
       if (ana_color === "w") {
@@ -1802,7 +1810,15 @@ function GetMoveHtml(i, hist) {
     else if (delta > 50) move_type = 2;
     else move_type = 1;
   }
-  if (move_type === 4) {
+  if (typeof eval_best_move[i] === 'undefined') {
+    hcolor="#ffffff";
+    comment = '';
+  }
+  else if (eval_best_move[i].san == hist[i].san) {
+    hcolor="#99ff99";
+    comment = "Best move (" + eval_best_score[i + 1] + " " + eval_afterbest_score[i] + ")";
+  }
+  else if (move_type === 4) {
     hcolor="#ff5555";
     comment = "Blunder (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
   }
@@ -1816,12 +1832,7 @@ function GetMoveHtml(i, hist) {
   }
   else if (move_type === 1) {
     hcolor="#99ff99";
-    if (eval_best_move[i].san == hist[i].san) {
-      comment = "Best move";
-    }
-    else {
-      comment = "Good move (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
-    }
+    comment = "Good move (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
   }
   else if (move_type === 0) {
     hcolor="#ffffff";
