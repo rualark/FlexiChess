@@ -13,6 +13,13 @@ $board_width = 600;
 $board_width_padded = $board_width - 5;
 
 login();
+if (!$uid) {
+  $ua['u_depth'] = 12;
+  $ua['u_bestmoves'] = 1;
+  $ua['u_hint'] = 1;
+  $ua['u_score'] = 1;
+}
+
 
 include "template/menu.php";
 echo "<div class=container>";
@@ -72,6 +79,11 @@ echo "</table>";
 <script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
 <script language='JavaScript' type='text/javascript' src='js/stockfish_engine.js'></script>
 <script>
+
+<?php
+echo "eval_depth = $ua[u_depth];";
+?>
+
 let game = Chess();
 game.load_pgn('<?=$pgn?>');
 
@@ -110,14 +122,17 @@ function send_fen() {
 
 function pValueSum(color) {
   let totalEvaluation = 0;
+  // For some reason game does not return correct board
+  // This is why I create copy of game
+  let mygame = new Chess(game.fen());
   for (let i = 0; i <= 119; i++) {
     /* did we run off the end of the board */
     if (i & 0x88) { i += 7; continue; }
-    if (typeof game.board[i] !== 'undefined' && game.board[i] != null) {
-      let pv = pvalue[game.board[i].type];
-      if (game.board[i].color === color) {
+    if (typeof mygame.board[i] !== 'undefined' && mygame.board[i] != null) {
+      let pv = pvalue[mygame.board[i].type];
+      if (mygame.board[i].color === color) {
         totalEvaluation += pv;
-        //console.log("Evaluated", game.board[i], pv);
+        //console.log("Evaluated", mygame.board[i], pv);
       }
     }
   }
@@ -312,6 +327,7 @@ function eval_pos(turn, color) {
       ShowProgress();
       eval_cur_depth = depth;
       eval_best_score[eval_turn] = score;
+      if (depth != engine_eval.depth) return;
       ShowPgn();
     }
   });
@@ -364,6 +380,7 @@ function analyse_move(turn, color) {
       ana_cur_depth = depth;
       eval_afterbest_score[ana_turn] = score;
       if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
+      if (depth != engine_ana.depth) return;
       ShowPgn();
     }
   });

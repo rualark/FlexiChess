@@ -25,6 +25,12 @@ if ($rs_w == '') $rs_w = 0;
 $title = "$site_name: Play";
 
 login();
+if (!$uid) {
+  $ua['u_depth'] = 12;
+  $ua['u_bestmoves'] = 1;
+  $ua['u_hint'] = 1;
+  $ua['u_score'] = 1;
+}
 
 load_rules();
 
@@ -186,6 +192,7 @@ foreach ($rla as $rid => $rl) {
 
 echo "rs_b = $rs_b;\n";
 echo "rs_w = $rs_w;\n";
+echo "eval_depth = $ua[u_depth];";
 ?>
 
 let removeGreySquares = function() {
