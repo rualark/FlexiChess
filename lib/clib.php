@@ -50,7 +50,7 @@ function start_collapse_container($cid, $header) {
   echo "<div class='collapse-container$cid' style='width: 100%'>";
   echo "<div class='collapse-header$cid'  align=left><span>$header...</span></div>";
   echo "<div class='collapse-content$cid'>";
-  echo "<table>";
+  echo "<table width='100%'>";
 }
 
 function end_collapse_container($cid, $header) {

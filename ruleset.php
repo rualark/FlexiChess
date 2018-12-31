@@ -145,8 +145,14 @@ function show_edit_ruleset() {
       $rpar2[$rid] = $rl['Par2'];
     }
     echo "<tr>";
-    echo "<td>";
+    $diff = round(get_difficulty($rid, 100, $rpar0[$rid], $rpar1[$rid], $rpar2[$rid]), 1);
+    $color = make_color(255,
+      max(0, 255 - 2 * $diff),
+      max(0, 255 - 2 * $diff)
+    );
+    echo "<td bgcolor='$color'>";
     $st = $rl['Rname'];
+    // style='background-color: #FFBBBB'
     $st = str_replace("XX", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='xx$rid' name='xx$rid' value='$rpar0[$rid]'> <span>", $st);
     $st = str_replace("YY", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='yy$rid' name='yy$rid' value='$rpar1[$rid]'> <span>", $st);
     $st = str_replace("ZZ", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='zz$rid' name='zz$rid' value='$rpar2[$rid]'> <span>", $st);
