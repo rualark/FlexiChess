@@ -245,6 +245,17 @@ function goToMove(i) {
   ShowStatus();
   ShowRating(eval_best_score[cur_move + 1], eval_score_st[cur_move + 1]);
   ShowPgn();
+  ShowMove();
+}
+
+function ShowMove() {
+  boardEl.find('.highlight-yellow').removeClass('highlight-yellow');
+  boardEl.find('.highlight-green').removeClass('highlight-green');
+  let from = hist[cur_move].from;
+  let to = hist[cur_move].to;
+  boardEl.find('.square-' + from).addClass('highlight-yellow');
+  boardEl.find('.square-' + to).addClass('highlight-yellow');
+  //window.setTimeout(HighlightPosMoves, 1500);
 }
 
 function eval_pos(turn, color) {

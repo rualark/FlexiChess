@@ -18,6 +18,7 @@ login();
 include "template/menu.php";
 echo "<div class=container>";
 echo "<br>";
+echo "<h5><p align='center'>Edit starting position:</p></h5>";
 
 load_rules();
 
