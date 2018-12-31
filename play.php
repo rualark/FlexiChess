@@ -482,6 +482,22 @@ function CapturesValue(color) {
   return val;
 }
 
+function pValueSum(color) {
+  let totalEvaluation = 0;
+  for (let i = 0; i <= 119; i++) {
+    /* did we run off the end of the board */
+    if (i & 0x88) { i += 7; continue; }
+    if (typeof game.board[i] !== 'undefined' && game.board[i] != null) {
+      let pv = pvalue[game.board[i].type];
+      if (game.board[i].color === color) {
+        totalEvaluation += pv;
+        console.log("Evaluated", game.board[i], pv);
+      }
+    }
+  }
+  return totalEvaluation;
+}
+
 function Undo() {
   if (engine_eval.state === 'Running' ||
     engine_ana.state === 'Running' ||
@@ -1738,8 +1754,8 @@ let updateStatus = function() {
   //pgnEl.attr('data-content', mypgn);
   //pgnEl.popover('show');
   ShowPgn();
-  bcapturesEl.html("<b>Black captures balance: " + (CapturesValue('b') - CapturesValue('w')));
-  wcapturesEl.html("<b>White captures balance: " + (CapturesValue('w') - CapturesValue('b')));
+  bcapturesEl.html("<b>Black material balance: " + (pValueSum('b') - pValueSum('w')));
+  wcapturesEl.html("<b>White material balance: " + (pValueSum('w') - pValueSum('b')));
 };
 
 function ShowStatus() {
