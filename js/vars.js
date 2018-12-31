@@ -1,6 +1,6 @@
 let game_status = '';
 let engine_eval;
-let eval_depth = 16;
+let eval_depth = 12;
 let eval_best_move = [];
 let eval_best_score = [];
 let eval_afterbest_score = [];

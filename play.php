@@ -378,13 +378,13 @@ function analyse_move(move, turn, color) {
         score *= -1;
       }
 
-      //if (depth != engine_ana.depth) return;
       ana_cur_depth = depth;
       ShowProgress();
       ana_cur_depth = depth;
       eval_afterbest_score[ana_turn] = score;
-      if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
       ShowPgn();
+      if (depth != engine_ana.depth) return;
+      if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
     }
   });
 }
@@ -431,6 +431,7 @@ function stockfish_go(color) {
 }
 
 function MakeMove(move, updateBoard) {
+  if (debugging) console.log("Making move: ", move, updateBoard);
   if (engine_eval.state === 'Running' ||
     engine_ana.state === 'Running' ||
     (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
@@ -1491,10 +1492,11 @@ function DisableStockfish(rid) {
   if (!ract[rid]) return;
   let from = engine[game.turn()].best_move[game.history().length].substr(0, 2);
   let to = engine[game.turn()].best_move[game.history().length].substr(2, 2);
+  let prom = engine[game.turn()].best_move[game.history().length].substr(4, 1);
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (move.from !== from || move.to !== to)
+    if (move.from !== from || move.to !== to || move.promotion !== prom)
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1509,20 +1511,20 @@ function DisableStockfishAvailable(rid) {
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.disabled) continue;
-    let score = engine[game.turn()].mpv[move.from + move.to];
+    let score = engine[game.turn()].mpv[move.from + move.to + move.promotion];
     if (typeof score === 'undefined') {
-      if (debugging) console.log("Move " + move.from + move.to + " not found");
+      if (debugging) console.log("Move " + move.from + move.to + move.promotion + " not found");
       score = -100000000 - Math.random() * 100000;
     }
     if (score > best_score) {
       best_score = score;
-      best_move = move.from + move.to;
+      best_move = move.from + move.to + move.promotion;
     }
   }
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (best_move !== move.from + move.to)
+    if (best_move !== move.from + move.to + move.promotion)
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1746,6 +1748,7 @@ let updateStatus = function() {
     }
     else last_cap = '';
     for (let i=0; i<posMoves.length; ++i) {
+      if (typeof posMoves[i].promotion === 'undefined') posMoves[i].promotion = '';
       posMoves[i].disabled = 0;
       posMoves[i].chess = new Chess(game.fen());
       posMoves[i].chess.move(posMoves[i]);
@@ -1859,13 +1862,15 @@ function RemoveDisabledMoves() {
 }
 
 function AutoMove(color) {
+  //console.log("Trying AutoMove", countObjectsByKey(posMoves2, 'disabled', 0), ract[101], game.history().length, rpar[color][101][0] * 2);
   if (countObjectsByKey(posMoves2, 'disabled', 0) === 1 ||
-    (ract[101] && game.history().length > rpar[color][101][0] * 2)) {
+    (ract[101] && game.history().length <= rpar[color][101][0] * 2)) {
     RandomMove();
   }
 }
 
 function RandomMove() {
+  //console.log("Trying RandomMove");
   let randomIndex = Math.floor(Math.random() * posMoves2.length);
   MakeMove(posMoves2[randomIndex], 1);
 }
