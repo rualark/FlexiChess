@@ -51,7 +51,6 @@ pvalue['k'] = 100;
 let debugging = 0;
 
 let board,
-  game = new Chess(),
   boardEl = $('#board'),
   statusEl = $('#status'),
   brulesEl = $('#brules'),

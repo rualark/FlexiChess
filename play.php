@@ -12,6 +12,9 @@ start_time();
 $rs_b = secure_variable("rs_b");
 $rs_w = secure_variable("rs_w");
 $view = secure_variable("view");
+$fen = secure_variable("fen");
+if ($fen == "") $fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 if ($view == "mobile" || ($view == "" && $mobile_detect->isMobile())) $show_mobile = 1;
 
 if ($rs_b == '') $rs_b = 0;
@@ -137,6 +140,7 @@ echo "</table>";
 <script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
 <script language='JavaScript' type='text/javascript' src='js/stockfish_engine.js'></script>
 <script>
+  let game = new Chess('<?=$fen?>');
 
 <?php
 
@@ -1873,7 +1877,7 @@ function HighlightPosMoves() {
 
 let cfg = {
   draggable: true,
-  position: 'start',
+  position: game.fen(),
   onDragStart: onDragStart,
   onDrop: onDrop,
   onMouseoutSquare: onMouseoutSquare,
