@@ -1,6 +1,6 @@
 let game_status = '';
 let engine_eval;
-let eval_depth = 12;
+let eval_depth = 16;
 let eval_best_move = [];
 let eval_best_score = [];
 let eval_afterbest_score = [];
@@ -8,7 +8,7 @@ let eval_ponder = [];
 let eval_turn = 0;
 let eval_color = 'w';
 let eval_chess;
-let eval_score_st;
+let eval_score_st = [];
 let ana_chess;
 let ana_turn = 0;
 let ana_color = 'w';
@@ -48,7 +48,7 @@ pvalue['r'] = 5;
 pvalue['q'] = 9;
 pvalue['k'] = 100;
 
-let debugging = 0;
+let debugging = 1;
 
 let board,
   boardEl = $('#board'),
@@ -65,7 +65,7 @@ let board,
   // Last captured piece in history
   prelast_cap,
   // History of moves
-  hist
+  hist = []
 ;
 
 // Possible moves

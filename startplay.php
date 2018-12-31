@@ -8,6 +8,10 @@ $title = "$site_name: New game";
 
 $rs_b = secure_variable("rs_b");
 $rs_w = secure_variable("rs_w");
+$move_color = secure_variable("move_color");
+if ($move_color == "") $move_color = "w";
+$fen = secure_variable("fen");
+if ($fen == "") $fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 login();
 
@@ -59,15 +63,31 @@ echo "<div id='board' style='width: 400px; margin:0 auto'></div>";
   sparePieces: true
   });
 
-  board.position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  board.position('<?=$fen?>');
   $('#startBtn').on('click', board.start);
   $('#clearBtn').on('click', board.clear);
 
   function send_fen() {
-    document.getElementById('input_fen').value = board.fen() + ' w KQkq - 0 1';
+    document.getElementById('input_fen').value =
+      board.fen() + ' ' +
+      document.getElementById('sel_move_color').value + ' KQkq - 0 1';
   }
 </script>
+
 <?php
+
+echo "<div class='form-group'>";
+echo "<label for='move_color'><b>Next move:</b></label>";
+echo "<select class='form-control custom-select' id='sel_move_color' name='move_color'>\n";
+echo "<option value=w";
+if ($move_color == "w") echo " selected";
+echo ">White to move</option>\n";
+echo "<option value=b";
+if ($move_color == "b") echo " selected";
+echo ">Black to move</option>\n";
+echo "</select>";
+echo "</div>";
+
 show_ruleset_select("rs_b", "Black", $rs_b);
 show_ruleset_select("rs_w", "White", $rs_w);
 

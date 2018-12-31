@@ -41,8 +41,22 @@ show_chatovod("artquiz");
         ?>
         <ul class="navbar-nav mr-auto">
           <li class=nav-item><a class=nav-link href="startplay.php"><b>Play</b></a></li>
-          <li class=nav-item><a class=nav-link href="rulesets.php">Rule sets</a></li>
-          <li class=nav-item><a class=nav-link href="ruleset.php?act=new">New</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown02" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Rules</a>
+            <div class="dropdown-menu" aria-labelledby="dropdown01">
+              <a class="dropdown-item" href="rulesets.php">Rulesets</a>
+              <a class="dropdown-item" href="ruleset.php?act=new">New ruleset</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown02" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Analysis</a>
+            <div class="dropdown-menu" aria-labelledby="dropdown01">
+              <a class="dropdown-item" href="gameslog.php">Games log</a>
+              <a class="dropdown-item" href="importpgn.php">Import PGN</a>
+            </div>
+          </li>
           <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
         </ul>
         <ul class="navbar-nav">
@@ -66,7 +80,8 @@ show_chatovod("artquiz");
         ?>
         <ul class="navbar-nav mr-auto">
           <li class=nav-item><a class=nav-link href="startplay.php"><b>Play</b></a></li>
-          <li class=nav-item><a class=nav-link href="rulesets.php">Rule sets</a></li>
+          <li class=nav-item><a class=nav-link href="rulesets.php">Rulesets</a></li>
+          <li class=nav-item><a class=nav-link href="gameslog.php">Analysis</a></li>
           <li class=nav-item><a class=nav-link href="contact.php">Contact</a></li>
         </ul>
         <ul class="navbar-nav">

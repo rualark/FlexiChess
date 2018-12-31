@@ -12,6 +12,8 @@ start_time();
 $rs_b = secure_variable("rs_b");
 $rs_w = secure_variable("rs_w");
 $view = secure_variable("view");
+$move_color = secure_variable("move_color");
+if ($move_color == "") $move_color = "w";
 $fen = secure_variable("fen");
 if ($fen == "") $fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -228,8 +230,8 @@ let onMouseoutSquare = function(square, piece) {
 let onDragStart = function(source, piece, position, orientation) {
   if (engine_eval.state === 'Running' ||
     engine_ana.state === 'Running' ||
-    engine['b'] === 'Running' ||
-    engine['w'] === 'Running'
+    (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
+    (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
     return false;
   }
@@ -317,15 +319,15 @@ function eval_pos(turn, color) {
       if (eval_color === "b") {
         score *= -1;
       }
-      eval_score_st = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
+      eval_score_st[eval_turn] = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
       if (type === "mate") {
-        eval_score_st = "mate in " + Math.abs(score);
+        eval_score_st[eval_turn] = "mate in " + Math.abs(score);
         score = 100000 * score;
       }
 
       eval_cur_depth = depth;
       ShowProgress();
-      ShowRating(score);
+      ShowRating(score, eval_score_st[eval_turn]);
       //if (depth != engine_eval.depth) return;
       eval_cur_depth = depth;
       eval_best_score[eval_turn] = score;
@@ -404,6 +406,7 @@ function stockfish_go(color) {
     }
   }, function stream(str)
   {
+    if (debugging) console.log(color + ": " + str);
     let matches = str.match(/depth (\d+) .*score (cp|mate) ([-\d]+) .*pv (.+)/),
       score,
       type,
@@ -430,8 +433,8 @@ function stockfish_go(color) {
 function MakeMove(move, updateBoard) {
   if (engine_eval.state === 'Running' ||
     engine_ana.state === 'Running' ||
-    engine['b'] === 'Running' ||
-    engine['w'] === 'Running'
+    (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
+    (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
     if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
     window.setTimeout(function () {
@@ -449,6 +452,8 @@ function MakeMove(move, updateBoard) {
       act: 'save_move',
       g_id: game_id,
       u_id: <?=$uid?>,
+      rs_b: '<?=$rs_b?>',
+      rs_w: '<?=$rs_w?>',
       fen: game.fen(),
       pgn: game.pgn()
     },
@@ -495,7 +500,7 @@ function pValueSum(color) {
       let pv = pvalue[game.board[i].type];
       if (game.board[i].color === color) {
         totalEvaluation += pv;
-        console.log("Evaluated", game.board[i], pv);
+        //console.log("Evaluated", game.board[i], pv);
       }
     }
   }
@@ -505,8 +510,8 @@ function pValueSum(color) {
 function Undo() {
   if (engine_eval.state === 'Running' ||
     engine_ana.state === 'Running' ||
-    engine['b'] === 'Running' ||
-    engine['w'] === 'Running'
+    (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
+    (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
     if (debugging) console.log("Undo is waiting until stockfish finishes");
     window.setTimeout(Undo, 100);
@@ -1764,8 +1769,9 @@ let updateStatus = function() {
 
 function ShowStatus() {
   let st = game_status;
-  if (typeof eval_score_st != 'undefined' && eval_score_st != '')
-    st += " (" + eval_score_st + ")";
+  let est = eval_score_st[game.history().length];
+  if (typeof est != 'undefined' && est != '')
+    st += " (" + est + ")";
   statusEl.html(st);
 }
 
@@ -1886,7 +1892,7 @@ let cfg = {
 };
 board = ChessBoard('board', cfg);
 
-function ShowRating(rating) {
+function ShowRating(rating, st) {
   let canvas = document.getElementById("rating_indicator");
   let ctx = canvas.getContext("2d");
   let pos = rating * canvas.height / 3000 + canvas.height / 2;
@@ -1899,7 +1905,7 @@ function ShowRating(rating) {
   ctx.lineWidth = 4;
   ctx.strokeStyle = '#ff0000';
   ctx.stroke();
-  canvas.title = eval_score_st;
+  canvas.title = st;
 }
 
 function ShowProgress() {
