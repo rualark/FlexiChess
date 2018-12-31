@@ -111,7 +111,7 @@ else {
 }
 echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
-echo "<button onclick=\"ShowHint();\">Hint</button>\n";
+if ($ua['u_hint']) echo "<button onclick=\"ShowHint();\">Hint</button>\n";
 if ($show_mobile) {
   echo "<form style='display:inline;' role=search method=get action='' target=_blank>";
   echo "<input type='hidden' name='rs_b' value='$rs_b'>";
@@ -1819,7 +1819,9 @@ function GetMoveHtml(i, hist) {
     hcolor="#ffffff";
     comment = '';
   }
-  st += "<td title='" + comment + "' bgcolor=" + hcolor + ">&nbsp;";
+  let st2 = "<td title='" + comment + "' bgcolor=" + hcolor + ">";
+  <? if ($ua['u_bestmoves']) echo "st += st2;" ?>
+  st += "&nbsp;";
   st += hist[i].san;
   st += "&nbsp;";
   return st;
@@ -1839,11 +1841,13 @@ function ShowPgn() {
       mypgn += GetMoveHtml(i + 1, hist);
     }
     else mypgn += "<td>";
-    mypgn += "<td>&nbsp; best: &nbsp;";
-    mypgn += "<td>&nbsp;" + eval_best_move[i].san + "&nbsp;";
+    let mypgn2 = '';
+    mypgn2 += "<td>&nbsp; best: &nbsp;";
+    mypgn2 += "<td>&nbsp;" + eval_best_move[i].san + "&nbsp;";
     if (i<turn - 1) {
-      mypgn += "<td>&nbsp;" + eval_best_move[i + 1].san + "&nbsp;";
+      mypgn2 += "<td>&nbsp;" + eval_best_move[i + 1].san + "&nbsp;";
     }
+    <? if ($ua['u_bestmoves']) echo "mypgn += mypgn2;" ?>
   }
   mypgn += "</table>";
   pgnEl.html(mypgn);
@@ -1898,6 +1902,7 @@ let cfg = {
 board = ChessBoard('board', cfg);
 
 function ShowRating(rating, st) {
+  <? if (!$ua['u_score']) echo "return;" ?>
   let canvas = document.getElementById("rating_indicator");
   let ctx = canvas.getContext("2d");
   let pos = rating * canvas.height / 3000 + canvas.height / 2;
@@ -1935,6 +1940,7 @@ function ShowProgress() {
 }
 
 function ShowHint() {
+  <? if (!$ua['u_hint']) echo "return;" ?>
   if (typeof eval_best_move[game.history().length] === 'undefined') return;
   boardEl.find('.highlight-red').removeClass('highlight-red');
   boardEl.find('.highlight-green').removeClass('highlight-green');

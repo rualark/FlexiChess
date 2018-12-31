@@ -64,7 +64,7 @@ show_chatovod("artquiz");
             <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <?=$ua['u_name'] ?></a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
-              <a class="dropdown-item" href="profile.php">Profile</a>
+              <a class="dropdown-item" href="profile.php">Settings</a>
               <?php
               if ($ua['u_admin']) {
                 echo "<a target=_blank class='dropdown-item' href='stats.php'>Stats</a>";
