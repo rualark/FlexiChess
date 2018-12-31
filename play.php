@@ -1773,8 +1773,9 @@ let updateStatus = function() {
 function ShowStatus() {
   let st = game_status;
   let est = eval_score_st[game.history().length];
-  if (typeof est != 'undefined' && est != '')
-    st += " (" + est + ")";
+  if (typeof est != 'undefined' && est != '') {
+    <? if ($ua['u_score']) echo "st += ' (' + est + ')';"; ?>
+  }
   statusEl.html(st);
 }
 

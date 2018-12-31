@@ -228,8 +228,9 @@ function ShowStatus() {
   }
   let st = game_status;
   let est = eval_score_st[cur_move + 1];
-  if (typeof est != 'undefined' && est != '')
+  if (typeof est != 'undefined' && est != '') {
     st += " (" + est + ")";
+  }
   $('#status').html(st);
   $('#bcaptures').html("<b>Black material balance: " + (pValueSum('b') - pValueSum('w')));
   $('#wcaptures').html("<b>White material balance: " + (pValueSum('w') - pValueSum('b')));
@@ -416,10 +417,15 @@ init_engine_eval();
 init_engine_ana();
 eval_pos(0, eval_chess.turn());
 ShowPgn();
+
+$(document).ready(function(){
+  $('[data-toggle="popover"]').popover();
+});
 </script>
 <?php
 
-echo "<a class='btn btn-primary' href='startplay.php?move_color=$move_color&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'>Continue game</a>";
+echo "<a class='btn btn-primary' href='startplay.php?move_color=$move_color&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'>Continue game</a> ";
+echo "<button class='btn btn-disabled' data-html=true data-toggle=popover title='PGN' data-content='<pre>$w[pgn]'>Show PGN</button> ";
 
 include "template/footer.php";
 ?>
