@@ -40,14 +40,6 @@ $w = mysqli_fetch_assoc($r);
 
 $pgn = str_replace("\n", "\\n", $w['pgn']);
 $pgn = str_replace("\r", "", $pgn);
-// Detect move color
-$move_color = 'w';
-$sa = explode(" ", $pgn);
-for ($i = count($sa) - 1; $i>=0; --$i) {
-  if (is_numeric($sa[$i][0])) {
-    if ($i == count($sa) - 2) $move_color = 'b';
-  }
-}
 
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";
@@ -86,6 +78,7 @@ echo "eval_depth = $ua[u_depth];";
 
 let game = Chess();
 game.load_pgn('<?=$pgn?>');
+let move_color = game.turn();
 
 eval_chess = Chess();
 eval_chess.load_pgn('<?=$pgn?>');
@@ -449,7 +442,7 @@ $(document).ready(function(){
 </script>
 <?php
 
-echo "<a class='btn btn-primary' href='startplay.php?move_color=$move_color&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'>Continue game</a> ";
+echo "<a class='btn btn-primary' href=# onclick=\"window.location.href = 'startplay.php?move_color=' + move_color + '&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'\">Continue game</a> ";
 echo "<button class='btn btn-disabled' data-html=true data-toggle=popover title='PGN' data-content='<pre>$w[pgn]'>Show PGN</button> ";
 
 echo "<br><br>";
