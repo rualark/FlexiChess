@@ -215,6 +215,7 @@ let greySquare = function(square) {
 function HighlightSquares(square) {
   // exit if there are no moves available for this square
   if (posMoves.length === 0) return;
+  if (game.game_over()) return;
 
   // highlight the possible squares for this piece
   for (let i = 0; i < posMoves.length; i++) {
@@ -1721,6 +1722,7 @@ let updateStatus = function() {
   }
   eval_pos(game.history().length, game.turn());
 
+  hist = game.history({verbose: true});
   let moveColor = 'White';
   if (game.turn() === 'b') {
     moveColor = 'Black';
@@ -1747,7 +1749,6 @@ let updateStatus = function() {
     posMoves = game.moves({
       verbose: true
     });
-    hist = game.history({verbose: true});
     rdis = [];
     tnum = hist.length;
     if (hist.length > 1) {
@@ -1871,6 +1872,7 @@ function HighlightPosMoves() {
     boardEl.find('.square-' + hist[hist.length - 1].to).addClass('highlight-yellow');
     boardEl.find('.square-' + hist[hist.length - 1].from).addClass('highlight-yellow');
   }
+  if (game.game_over()) return;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.disabled) continue;
