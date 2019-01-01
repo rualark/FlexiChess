@@ -438,7 +438,7 @@ function stockfish_go(color) {
     score = Number(matches[3]);
     pv = matches[4].split(" ");
     if (type === "mate") {
-      score = 100000 * score;
+      score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
     }
     engine[game.turn()].mpv[pv[0]] = score;
     engine[game.turn()].mpv2.push({score: score, move: pv[0]});
@@ -572,6 +572,7 @@ function DisableMove(i) {
   }
 }
 
+// Must move pawns
 function DisablePawns(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1348,6 +1349,7 @@ function DisableNeedKingMoves(rid) {
   ValidateRule(rid);
 }
 
+// Must move pawns each YY moves
 function DisableNeedPawnMoves(rid) {
   if (!ract[rid]) return;
   if (hist.length < rpar[game.turn()][rid][1] * 2) return;
@@ -1519,9 +1521,9 @@ function DisableStockfish(rid) {
 
 function DisableStockfishAvailable(rid) {
   if (!ract[rid]) return;
-  let best_score = -100000;
+  let best_score = -1000000000;
   let best_move = '';
-  if (debugging) console.log(engine[game.turn()].mpv);
+  if (debugging) console.log("MPV", engine[game.turn()].mpv);
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
