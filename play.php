@@ -96,7 +96,6 @@ echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n
 echo "<link rel='stylesheet' href='css/play.css'>\n";
 echo "<script src='chessboardjs/js/chessboard-0.3.0.min.js'></script>\n";
 echo "<script src='chessboardjs/js/chess.js'></script>\n";
-echo "<script src='js/lib.js'></script>\n";
 echo "<script src='js/simple-chess-ai.js'></script>\n";
 echo "<script language='JavaScript' type='text/javascript' src='plugin/notify.min.js'></script>";
 echo "<table>";
@@ -145,7 +144,8 @@ echo "<div style='line-height: 1; width: {$rule_width}px; height: {$pgn_height}p
 echo "</table>";
 ?>
 
-<script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
+  <script language='JavaScript' type='text/javascript' src='js/vars.js'></script>
+  <script language='JavaScript' type='text/javascript' src='js/lib.js'></script>
 <script language='JavaScript' type='text/javascript' src='js/stockfish_engine.js'></script>
 <script>
   let game = new Chess('<?=$fen?>');
@@ -292,7 +292,7 @@ function eval_pos(turn, color) {
   eval_chess = new Chess(game.fen());
   if (debugging) console.log("Called eval_pos with: ", eval_turn, eval_color);
   eval_best_move.length = eval_turn + 1;
-  eval_best_score.length = eval_turn + 1;
+  eval_score.length = eval_turn + 1;
   eval_afterbest_score.length = eval_turn;
   engine_eval.send("stop");
   engine_eval.send("position fen " + game.fen());
@@ -300,14 +300,15 @@ function eval_pos(turn, color) {
   {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
-      if (matches[1] === "(none)" && typeof eval_best_score[eval_turn] === 'undefined') {
-        if (eval_color === 'b') eval_best_score[eval_turn] = 100000;
-        else eval_best_score[eval_turn] = -100000;
+      if (matches[1] === "(none)" && typeof eval_score[eval_turn] === 'undefined') {
+        if (eval_color === 'b') eval_score[eval_turn] = 1000000;
+        else eval_score[eval_turn] = -1000000;
+        eval_score_st[eval_turn] = build_score_st('mate', 0);
       }
       eval_chess.move({from: matches[1].substr(0, 2), to: matches[1].substr(2, 2), promotion: 'q'});
       eval_best_move[eval_turn] = eval_chess.history({ verbose: true })[eval_chess.history().length - 1];
       eval_ponder[eval_turn] = matches[2];
-      if (debugging) console.log("Score eval: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), eval_turn)
+      if (debugging) console.log("Score eval: ", eval_afterbest_score, eval_score, eval_best_move, game.history(), eval_turn)
       engine_eval.state = 'Wait';
       ShowPgn();
       ShowStatus();
@@ -332,18 +333,11 @@ function eval_pos(turn, color) {
       if (eval_color === "b") {
         score *= -1;
       }
-      eval_score_st[eval_turn] = (score>0 ? "+" : "") + Math.round(score / 10) / 10;
-      if (type === "mate") {
-        eval_score_st[eval_turn] = "mate in " + Math.abs(score);
-        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
-      }
-
+      eval_score[eval_turn] = build_score(type, score);
+      eval_score_st[eval_turn] = build_score_st(type, score);
       eval_cur_depth = depth;
+      ShowRating(eval_score[eval_turn], eval_score_st[eval_turn]);
       ShowProgress();
-      ShowRating(score, eval_score_st[eval_turn]);
-      //if (depth != engine_eval.depth) return;
-      eval_cur_depth = depth;
-      eval_best_score[eval_turn] = score;
     }
   });
 }
@@ -364,8 +358,10 @@ function analyse_move(move, turn, color) {
     let matches = str.match(/^bestmove\s(\S+)(?:\sponder\s(\S+))?/);
     if (matches) {
       if (matches[1] === "(none)" && typeof eval_afterbest_score[ana_turn] === 'undefined') {
-        if (ana_color === 'w') eval_afterbest_score[ana_turn] = 100000;
-        else eval_afterbest_score[ana_turn] = -100000;
+        if (ana_color === 'w') eval_afterbest_score[ana_turn] = 1000000;
+        else eval_afterbest_score[ana_turn] = -1000000;
+        eval_afterscore_st[ana_turn] = build_score_st('mate', 0);
+        eval_afterbest_path[ana_turn] = '';
       }
       engine_ana.state = 'Wait';
     }
@@ -384,22 +380,20 @@ function analyse_move(move, turn, color) {
       type = matches[2];
       score = Number(matches[3]);
       pv = matches[4].split(" ");
-
-      if (type === "mate") {
-        score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
-      }
       /// Convert the relative score to an absolute score.
       if (ana_color === "w") {
         score *= -1;
       }
-
+      eval_afterbest_score[ana_turn] = build_score(type, score);
+      eval_afterscore_st[ana_turn] = build_score_st(type, score);
+      eval_afterbest_path[ana_turn] = matches[4].replace(/bmc.*/, '');
       ana_cur_depth = depth;
       ShowProgress();
-      ana_cur_depth = depth;
-      eval_afterbest_score[ana_turn] = score;
       ShowPgn();
-      if (depth != engine_ana.depth) return;
-      if (debugging) console.log("Score: ", eval_afterbest_score, eval_best_score, eval_best_move, game.history(), ana_turn);
+      if (debugging) {
+        if (depth != engine_ana.depth) return;
+        console.log("Score: ", eval_afterbest_score, eval_score, eval_best_move, game.history(), ana_turn);
+      }
     }
   });
 }
@@ -437,9 +431,7 @@ function stockfish_go(color) {
     type = matches[2];
     score = Number(matches[3]);
     pv = matches[4].split(" ");
-    if (type === "mate") {
-      score = Math.round(100000 / Math.abs(score + 1) * (score + 1)/Math.abs(score + 1));
-    }
+    score = build_score(type, score);
     engine[game.turn()].mpv[pv[0]] = score;
     engine[game.turn()].mpv2.push({score: score, move: pv[0]});
   });
@@ -1797,50 +1789,12 @@ function ShowStatus() {
 }
 
 function GetMoveHtml(i, hist) {
+  build_move_analysis(i, hist[i], eval_best_move[i],
+    eval_afterbest_score[i], eval_score[i + 1],
+    eval_afterscore_st[i], eval_score_st[i + 1],
+    eval_afterbest_path[i + 1]);
+  let st2 = "<td title='" + move_comment + "' bgcolor=" + move_hcolor + ">";
   let st = "";
-  let hcolor;
-  let comment;
-  let move_type = 0;
-  let delta = 0;
-  let sign = 1;
-  if (i % 2 === 1) sign = -1;
-  if (typeof eval_afterbest_score[i] !== 'undefined' &&
-    typeof eval_best_score[i + 1] !== 'undefined') {
-    delta = sign * (eval_afterbest_score[i] - eval_best_score[i + 1]);
-    if (delta > 300) move_type = 4;
-    else if (delta > 100) move_type = 3;
-    else if (delta > 50) move_type = 2;
-    else move_type = 1;
-  }
-  if (typeof eval_best_move[i] === 'undefined') {
-    hcolor="#ffffff";
-    comment = '';
-  }
-  else if (eval_best_move[i].san == hist[i].san) {
-    hcolor="#99ff99";
-    comment = "Best move (" + eval_best_score[i + 1] + " " + eval_afterbest_score[i] + ")";
-  }
-  else if (move_type === 4) {
-    hcolor="#ff5555";
-    comment = "Blunder (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
-  }
-  else if (move_type === 3) {
-    hcolor="#ffbb55";
-    comment = "Mistake (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
-  }
-  else if (move_type === 2) {
-    hcolor="#ffff00";
-    comment = "Inaccuracy (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
-  }
-  else if (move_type === 1) {
-    hcolor="#99ff99";
-    comment = "Good move (" + eval_best_score[i + 1] + "). Best move was " + eval_best_move[i].san + " (" + eval_afterbest_score[i] + ")";
-  }
-  else if (move_type === 0) {
-    hcolor="#ffffff";
-    comment = '';
-  }
-  let st2 = "<td title='" + comment + "' bgcolor=" + hcolor + ">";
   <? if ($ua['u_bestmoves']) echo "st += st2;" ?>
   st += "&nbsp;";
   st += hist[i].san;
@@ -1958,6 +1912,7 @@ function ShowProgress() {
     //ctx.fillStyle = "#00ff00";
     ctx.fillRect(0, 3, pos3, 4);
   }
+  canvas.title = 'Evaluation depth: ' + eval_depth;
 }
 
 function ShowHint() {
