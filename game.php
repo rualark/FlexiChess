@@ -391,6 +391,10 @@ function ShowRating(rating, st) {
   canvas.title = st;
 }
 
+function ContinueGame() {
+  window.location.href = 'startplay.php?move_color=' + game.turn() + '&fen=' + game.fen() + '&rs_b=$w[rs_b]&rs_w=$w[rs_w]';
+}
+
 //debugging = 1;
 init_engine_eval();
 init_engine_ana();
@@ -401,10 +405,11 @@ ShowStatus();
 $(document).ready(function(){
   $('[data-toggle="popover"]').popover();
 });
+
 </script>
 <?php
 
-echo "<a class='btn btn-primary' href=# onclick=\"window.location.href = 'startplay.php?move_color=' + move_color + '&fen=$w[fen]&rs_b=$w[rs_b]&rs_w=$w[rs_w]'\">Continue game</a> ";
+echo "<a class='btn btn-primary' href=# onclick=\"ContinueGame();\">Continue game from this position</a> ";
 echo "<button class='btn btn-disabled' data-html=true data-toggle=popover title='PGN' data-content='<pre>$w[pgn]'>Show PGN</button> ";
 
 echo "<br><br>";
