@@ -1768,10 +1768,10 @@ let updateStatus = function() {
     DisableMoves();
     RemoveDisabledMoves();
     ShowRules();
-    HighlightPosMoves();
     window.setTimeout(function() {AutoMove(game.turn())}, 500);
   }
 
+  HighlightPosMoves();
   ShowStatus();
   fenEl.html(game.fen());
   //pgnEl.attr('data-content', mypgn);
@@ -1826,15 +1826,16 @@ function ShowPgn() {
     mypgn2 += "<td>&nbsp;" + eval_best_move[i].san + "&nbsp;";
     if (i<turn - 1) {
       mypgn2 += "<td>&nbsp;" + eval_best_move[i + 1].san + "&nbsp;";
+      <? if ($ua['u_bestmoves']) echo "mypgn += mypgn2;" ?>
     }
-    <? if ($ua['u_bestmoves']) echo "mypgn += mypgn2;" ?>
   }
   mypgn += "</table>";
   pgnEl.html(mypgn);
   // Scroll to bottom
   let pgnSel = $('#pgn');
   pgnSel.scrollTop(pgnSel[0].scrollHeight);
-  $('[data-toggle="popover"]').popover();
+  let popoverEls = $('[data-toggle="popover"]');
+  if (popoverEls.length) popoverEls.popover();
 }
 
 function RemoveDisabledMoves() {
@@ -1862,6 +1863,7 @@ function RandomMove() {
 
 // Highlight possible moves
 function HighlightPosMoves() {
+  console.log("Clearing all highlights");
   boardEl.find('.highlight-red').removeClass('highlight-red');
   boardEl.find('.highlight-green').removeClass('highlight-green');
   boardEl.find('.highlight-yellow').removeClass('highlight-yellow');
