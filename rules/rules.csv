@@ -60,3 +60,7 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 159;Z/3+Y*3;;10;300;Stockfish;Prohibit Stockfish best moves (depth YY, rating <ZZ);I cannot use best available moves, which are selected by Stockfish algorithm (depth YY) while next best move is not lower than ZZ in rating
 161;0;;2;;Simple chess AI;SimpleChessAI best move (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY
 162;0;;2;;Simple chess AI;SimpleChessAI best move bad position (depth YY);Best move is chosen by Simple chess AI algorithm with depth YY (bad positions are preferred)
+163;100;999;;;I must protect;Move to protection (XX turns);I can move only to square, which is protected by my other pieces (during first XX turns)
+164;80;999;;;I must protect;Move to protection or capture (XX turns);I can either capture or move to square, which is protected by my other pieces (during first XX turns)
+165;110;999;;;I must protect;Move to max protection (XX turns);I can move only to square, which is protected by maximum number of my pieces (during first XX turns)
+166;90;999;;;I must protect;Move to max protection or capture (XX turns);I can capture or move to square, which is protected by maximum number of my pieces (during first XX turns)

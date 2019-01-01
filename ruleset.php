@@ -110,8 +110,8 @@ else {
   }
   if ($act == "save" || $act == "view") {
     if ($readonly == "") {
-      echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='play.php?rs_b=$rs_id'><img src=img/play_brown.png></a> ";
-      echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='play.php?rs_b=$rs_id&rs_w=$rs_id'><img src=img/play_cyan.png></a> ";
+      echo "<a data-toggle=tooltip data-placement=top title='Play white against this rule set' href='startplay.php?rs_b=$rs_id'><img src=img/play_brown.png></a> ";
+      echo "<a data-toggle=tooltip data-placement=top title='Play this rule set for both players' href='startplay.php?rs_b=$rs_id&rs_w=$rs_id'><img src=img/play_cyan.png></a> ";
       echo "<a data-toggle=tooltip data-placement=top title='Play this rule set against another rule set' href='rulesets.php?rs_w=$rs_id'><img src=img/play_violet.png></a> ";
       echo "<a href='ruleset.php?act=edit&rs_id=$rs_id'><img src=img/edit.png></a>";
     }
@@ -188,8 +188,8 @@ function show_view_ruleset() {
   GLOBAL $rla, $rs_id, $readonly, $rs, $rpos, $rpar0, $rpar1, $rpar2;
   echo "<table align=center border=2 cellpadding='3'>";
   echo "<tr>";
-  echo "<th bgcolor='#cccccc'>Probability&nbsp;&nbsp;</th>";
-  echo "<th bgcolor='#cccccc'>&nbsp;&nbsp;Rule</th>";
+  echo "<th bgcolor='#cccccc'>&nbsp;&nbsp;Probability&nbsp;&nbsp;</th>";
+  echo "<th bgcolor='#cccccc'>&nbsp;&nbsp;Rule&nbsp;&nbsp;</th>";
   foreach ($rla as $rid => $rl) {
     if (!$rpos[$rid]) continue;
     $st = $rl['Rname'];
@@ -207,9 +207,9 @@ function show_view_ruleset() {
       );
     echo "<tr>";
     echo "<td align='right' bgcolor='$color'>";
-    echo "<b>$rpos[$rid]%&nbsp;&nbsp;</b>";
+    echo "<b>&nbsp;&nbsp;$rpos[$rid]%&nbsp;&nbsp;</b>";
     echo "<td bgcolor='$color'>";
-    echo "&nbsp;&nbsp;<span data-toggle=tooltip data-placement=top title=\"$st2\nDifficulty: $diff\">$st</span><br>";
+    echo "&nbsp;&nbsp;<span data-toggle=tooltip data-placement=top title=\"$st2\nDifficulty: $diff\">$st</span>&nbsp;&nbsp;";
   }
   echo "</table>";
   echo "<br>";

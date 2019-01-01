@@ -1360,8 +1360,8 @@ var Chess = function(fen) {
       return attacked(color, SQUARES[square])
     },
 
-    attackedCnt: function(color, square) {
-      return attackedCnt(color, SQUARES[square])
+    attackedCnt: function(attacked_by_color, square) {
+      return attackedCnt(attacked_by_color, SQUARES[square])
     },
 
     all_attacks: function(color, color2) {

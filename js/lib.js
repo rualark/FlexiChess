@@ -42,9 +42,11 @@ function amax(arr) {
 }
 
 function build_score(type, score) {
+  let myscore;
   if (type === "mate") {
-    return Math.round(1000000 - Math.abs(score + 1) * 100) *
-      (score + 1) / Math.abs(score + 1);
+    myscore = Math.round(1000000 - Math.abs(score) * 100);
+    if (score < 0) myscore = -myscore;
+    return myscore;
   }
   else {
     return score;
@@ -90,7 +92,7 @@ function build_move_analysis(i, move, best_move, move_score, best_score, move_sc
   if (delta <= 0) {
     move_hcolor = '#99ff99';
     move_comment = "Good move (" + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
-    move_comment2 = "<b>Good move</b> (" + sign + " " + move_score + " " + best_score + " " + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
+    move_comment2 = "<b>Good move</b> (" + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
     return;
   }
   // Detect faster mate

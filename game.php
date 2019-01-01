@@ -203,7 +203,7 @@ function ShowStatus() {
   build_move_analysis(cur_move, hist[cur_move], eval_best_move[cur_move],
     eval_score[cur_move + 1], eval_afterbest_score[cur_move],
     eval_score_st[cur_move + 1], eval_afterscore_st[cur_move],
-    eval_afterbest_path[cur_move + 1]
+    eval_afterbest_path[cur_move]
   );
   st += "<br><table><tr><td bgcolor=" + move_hcolor + ">" + move_comment2 + "</table>";
   $('#status').html(st);
@@ -392,7 +392,7 @@ function ShowRating(rating, st) {
 }
 
 function ContinueGame() {
-  window.location.href = 'startplay.php?move_color=' + game.turn() + '&fen=' + game.fen() + '&rs_b=$w[rs_b]&rs_w=$w[rs_w]';
+  window.location.href = 'startplay.php?move_color=' + game.turn() + '&fen=' + game.fen() + '&<?="rs_b=$w[rs_b]&rs_w=$w[rs_w]"?>';
 }
 
 //debugging = 1;

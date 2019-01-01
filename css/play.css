@@ -21,4 +21,5 @@
 /* The max width is dependant on the container (more info below) */
 .popover{
     max-width: 200px; /* Max Width of the popover (depending on the container!) */
+    margin-left: 60px;
 }
