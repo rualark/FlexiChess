@@ -1864,6 +1864,11 @@ function RandomMove() {
 function HighlightPosMoves() {
   boardEl.find('.highlight-red').removeClass('highlight-red');
   boardEl.find('.highlight-green').removeClass('highlight-green');
+  boardEl.find('.highlight-yellow').removeClass('highlight-yellow');
+  if (hist.length > 0) {
+    boardEl.find('.square-' + hist[hist.length - 1].to).addClass('highlight-yellow');
+    boardEl.find('.square-' + hist[hist.length - 1].from).addClass('highlight-yellow');
+  }
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (move.disabled) continue;
