@@ -26,6 +26,7 @@ $title = "$site_name: Play";
 
 login();
 if (!$uid) {
+  $ua = array();
   $ua['u_depth'] = 12;
   $ua['u_bestmoves'] = 1;
   $ua['u_hint'] = 1;
@@ -58,6 +59,7 @@ if ($show_mobile) {
   <title><?=$title ?></title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/king.ico">
+  <link rel="stylesheet" href="plugin/bootstrap-4.0.0/bootstrap.min.css">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1790,10 +1792,13 @@ function ShowStatus() {
 
 function GetMoveHtml(i, hist) {
   build_move_analysis(i, hist[i], eval_best_move[i],
-    eval_afterbest_score[i], eval_score[i + 1],
-    eval_afterscore_st[i], eval_score_st[i + 1],
-    eval_afterbest_path[i + 1]);
-  let st2 = "<td title='" + move_comment + "' bgcolor=" + move_hcolor + ">";
+    eval_score[i + 1], eval_afterbest_score[i],
+    eval_score_st[i + 1], eval_afterscore_st[i],
+    eval_afterbest_path[i + 1]
+  );
+  let st2 = "<td data-html=true data-toggle=popover title='Move " + hist[i].san +
+    " analysis' data-content='<table cellpadding=4><tr><td bgcolor=" + move_hcolor + ">" +
+    move_comment2 + "' bgcolor=" + move_hcolor + ">";
   let st = "";
   <? if ($ua['u_bestmoves']) echo "st += st2;" ?>
   st += "&nbsp;";
@@ -1829,6 +1834,7 @@ function ShowPgn() {
   // Scroll to bottom
   let pgnSel = $('#pgn');
   pgnSel.scrollTop(pgnSel[0].scrollHeight);
+  $('[data-toggle="popover"]').popover();
 }
 
 function RemoveDisabledMoves() {

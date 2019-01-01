@@ -80,7 +80,7 @@ function build_move_analysis(i, move, best_move, move_score, best_score, move_sc
   if (best_move.san == move.san) {
     move_hcolor = '#99ff99';
     move_comment = "Best move (" + best_score_st + " or " + move_score_st + ")" + best_path_st;
-    move_comment2 = "<b>Best move</b>";
+    move_comment2 = "<b>Best move</b> (" + move_score_st + ")";
     return;
   }
   let sign = 1;
@@ -90,7 +90,7 @@ function build_move_analysis(i, move, best_move, move_score, best_score, move_sc
   if (delta <= 0) {
     move_hcolor = '#99ff99';
     move_comment = "Good move (" + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
-    move_comment2 = "<b>Good move</b> (" + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
+    move_comment2 = "<b>Good move</b> (" + sign + " " + move_score + " " + best_score + " " + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
     return;
   }
   // Detect faster mate
