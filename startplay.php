@@ -18,7 +18,6 @@ login();
 include "template/menu.php";
 echo "<div class=container>";
 echo "<br>";
-echo "<h5><p align='center'>Edit starting position:</p></h5>";
 
 load_rules();
 
@@ -55,7 +54,13 @@ echo "<script src='js/lib.js'></script>\n";
 echo "<script src='js/simple-chess-ai.js'></script>\n";
 echo "<script language='JavaScript' type='text/javascript' src='plugin/notify.min.js'></script>";
 
+echo "<table align='center'><tr><td>";
+echo "<h5><p align='center'>Edit starting position:</p></h5>";
 echo "<div id='board' style='width: 400px; margin:0 auto'></div>";
+echo "<td>";
+echo "<a href='#' onclick='board.start();' class='btn btn-secondary mb-2'>Starting position</a><br>";
+echo "<a href='#' onclick='board.clear();' class='btn btn-secondary mb-2'>Clear board</a>";
+echo "</table>";
 ?>
 <script>
   var board = ChessBoard('board', {
