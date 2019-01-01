@@ -10,6 +10,7 @@ $hint = secure_variable("login");
 $score = secure_variable("score");
 $bestmoves = secure_variable("bestmoves");
 $depth = secure_variable("depth");
+$undo = secure_variable("undo");
 
 $title = "$site_name: Settings";
 
@@ -20,7 +21,8 @@ if (!login()) {
 if ($act == "save") {
   $q = "UPDATE users SET u_login='$login', u_name='$name', u_depth='$depth', u_bestmoves='" .
     (isset($_GET['bestmoves'])?1:0) . "', u_hint='" .
-    (isset($_GET['hint'])?1:0) . "', u_score='" .
+    (isset($_GET['hint'])?1:0) . "', u_undo='" .
+    (isset($_GET['undo'])?1:0) . "', u_score='" .
     (isset($_GET['score'])?1:0) . "' 
     WHERE u_id='$uid'";
   //echo $q;
@@ -64,6 +66,10 @@ echo "<hr>";
   <div class="form-check">
     <input type="checkbox" class="form-check-input" name="bestmoves" id="bestmoves" <? if ($ua['u_bestmoves']) echo "checked";?>>
     <label class="form-check-label" for="bestmoves">Show best moves and detect blunders/mistakes during the game</label>
+  </div>
+  <div class="form-check">
+    <input type="checkbox" class="form-check-input" name="undo" id="undo" <? if ($ua['u_undo']) echo "checked";?>>
+    <label class="form-check-label" for="undo">Show Undo button during the game</label>
   </div>
   <br>
   <button type=submit value=submit name=submit class="btn btn-primary">Save settings</button>

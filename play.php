@@ -116,7 +116,8 @@ if ($show_mobile) {
 else {
   echo "<td valign='top'>";
 }
-echo "<button onclick=\"Undo();\">Undo</button>\n";
+if ($ua['u_undo'])
+  echo "<button onclick=\"Undo();\">Undo</button>\n";
 echo "<button onclick=\"RandomMove();\">Random</button>\n";
 if ($ua['u_hint']) echo "<button onclick=\"ShowHint();\">Hint</button>\n";
 if ($show_mobile) {
