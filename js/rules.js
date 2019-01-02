@@ -948,7 +948,7 @@ function DisableStockfish(rid) {
 function DisableStockfishAvailable(rid) {
   if (!ract[rid]) return;
   let best_score = -1000000000;
-  let best_move = '';
+  let best_moves = [];
   if (debugging) console.log("MPV", engine[game.turn()].mpv);
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
@@ -961,9 +961,15 @@ function DisableStockfishAvailable(rid) {
     }
     if (score > best_score) {
       best_score = score;
-      best_move = move.from + move.to + move.promotion;
+      best_moves = [];
+      best_moves.push(move.from + move.to + move.promotion);
+    }
+    else if (score === best_score) {
+      best_moves.push(move.from + move.to + move.promotion);
     }
   }
+  // Disambiguation
+  let best_move = best_moves[Math.floor(Math.random() * best_moves.length)];
   // Disable all moves except Stockfish best move
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
