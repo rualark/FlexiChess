@@ -28,9 +28,9 @@ if ($act == "save") {
     // Validate
     if ($_POST["pos$rid"] < 0) $_POST["pos$rid"] = 0;
     if ($_POST["pos$rid"] > 100) $_POST["pos$rid"] = 100;
-    if ($_POST["xx$rid"] < 0) $_POST["xx$rid"] = 0;
-    if ($_POST["yy$rid"] < 0) $_POST["yy$rid"] = 0;
-    if ($_POST["zz$rid"] < 0) $_POST["zz$rid"] = 0;
+    //if ($_POST["xx$rid"] < 0) $_POST["xx$rid"] = 0;
+    //if ($_POST["yy$rid"] < 0) $_POST["yy$rid"] = 0;
+    //if ($_POST["zz$rid"] < 0) $_POST["zz$rid"] = 0;
     if (!$_POST["pos$rid"]) continue;
     if ($_POST["pos$rid"] > 0) ++$rcount;
     if ($_POST["pos$rid"] == 100) ++$rcount100;
@@ -153,9 +153,9 @@ function show_edit_ruleset() {
     echo "<td bgcolor='$color'>";
     $st = $rl['Rname'];
     // style='background-color: #FFBBBB'
-    $st = str_replace("XX", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='xx$rid' name='xx$rid' value='$rpar0[$rid]'> <span>", $st);
-    $st = str_replace("YY", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='yy$rid' name='yy$rid' value='$rpar1[$rid]'> <span>", $st);
-    $st = str_replace("ZZ", "</span> <input $readonly type='number' min=0 style='width: 100px' class='form-control' id='zz$rid' name='zz$rid' value='$rpar2[$rid]'> <span>", $st);
+    $st = str_replace("XX", "</span> <input $readonly type='number' min=-100 style='width: 100px' class='form-control' id='xx$rid' name='xx$rid' value='$rpar0[$rid]'> <span>", $st);
+    $st = str_replace("YY", "</span> <input $readonly type='number' min=-100 style='width: 100px' class='form-control' id='yy$rid' name='yy$rid' value='$rpar1[$rid]'> <span>", $st);
+    $st = str_replace("ZZ", "</span> <input $readonly type='number' min=-100 style='width: 100px' class='form-control' id='zz$rid' name='zz$rid' value='$rpar2[$rid]'> <span>", $st);
     echo "<input data-toggle=tooltip data-placement=top title='Click to switch between probability 0% and 100%' type='checkbox' class='form-check-input' onchange=\"if (this.checked) {document.getElementById('pos$rid').value = '100';} else {document.getElementById('pos$rid').value = '0';}\" ";
     if ($rpos[$rid] == 100) echo "checked";
     echo "> ";

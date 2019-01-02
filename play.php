@@ -187,12 +187,16 @@ foreach ($rla as $rid => $rl) {
     send_js_var("rpar['b'][$rid][0]", $rpar['b'][$rid][0]);
     send_js_var("rpar['b'][$rid][1]", $rpar['b'][$rid][1]);
     send_js_var("rpar['b'][$rid][2]", $rpar['b'][$rid][2]);
+    send_js_var("rdif['b'][$rid]", get_difficulty($rid,
+      $rpos['b'][$rid], $rpar['b'][$rid][0], $rpar['b'][$rid][1], $rpar['b'][$rid][2]));
   }
   if ($rpos['w'][$rid]) {
     send_js_var("rpos['w'][$rid]", $rpos['w'][$rid]);
     send_js_var("rpar['w'][$rid][0]", $rpar['w'][$rid][0]);
     send_js_var("rpar['w'][$rid][1]", $rpar['w'][$rid][1]);
     send_js_var("rpar['w'][$rid][2]", $rpar['w'][$rid][2]);
+    send_js_var("rdif['w'][$rid]", get_difficulty($rid,
+      $rpos['w'][$rid], $rpar['w'][$rid][0], $rpar['w'][$rid][1], $rpar['w'][$rid][2]));
   }
 }
 
@@ -584,6 +588,19 @@ function ChooseRules() {
     if (item === 0) return;
     if (Math.random()*100 <= item) ract[i] = 1;
   });
+  // Check if rules should be disabled
+  let no_limits = 0;
+  let sign = 1;
+  if (game.turn() === 'b') sign = -1;
+  if (ract[167] && sign * eval_score[game.history().length - 1] < rpar[game.turn()][167][1] * 100) no_limits = 1;
+  if (ract[168] && pvsum[game.turn()] - pvsum[game.them()] < rpar[game.turn()][168][1]) no_limits = 1;
+  if (no_limits) {
+    ract.forEach(function(item, i, arr) {
+      console.log("Disabling rule: ", i, rdif[game.turn()][i]);
+      if (rdif[game.turn()][i] > 0)
+        ract[i] = 0;
+    });
+  }
 }
 
 function ShowRules() {
@@ -665,6 +682,8 @@ let updateStatus = function() {
     }
   }
   eval_pos(game.history().length, game.turn());
+  pvsum['b'] = pValueSum('b');
+  pvsum['w'] = pValueSum('w');
 
   hist = game.history({verbose: true});
   let moveColor = 'White';
@@ -722,8 +741,8 @@ let updateStatus = function() {
   //pgnEl.attr('data-content', mypgn);
   //pgnEl.popover('show');
   ShowPgn();
-  bcapturesEl.html("<b>Black material balance: " + (pValueSum('b') - pValueSum('w')));
-  wcapturesEl.html("<b>White material balance: " + (pValueSum('w') - pValueSum('b')));
+  bcapturesEl.html("<b>Black material balance: " + (pvsum['b'] - pvsum['w']));
+  wcapturesEl.html("<b>White material balance: " + (pvsum['w'] - pvsum['b']));
 };
 
 function ShowStatus() {
@@ -757,7 +776,11 @@ function ShowPgn() {
   let hist = game.history({ verbose: true });
   let turn = hist.length;
   mypgn = "<table>";
-  $('[data-toggle="popover"]').popover('hide');
+  let popoverEls;
+  popoverEls = $('[data-toggle="popover"]');
+  if (popoverEls.length) {
+    popoverEls.popover('hide');
+  }
   for (let i=0; i<turn; ++i) {
     if (i % 2 === 1) continue;
     if (typeof eval_best_move[i] === 'undefined') continue;
@@ -780,7 +803,7 @@ function ShowPgn() {
   // Scroll to bottom
   let pgnSel = $('#pgn');
   pgnSel.scrollTop(pgnSel[0].scrollHeight);
-  let popoverEls = $('[data-toggle="popover"]');
+  popoverEls = $('[data-toggle="popover"]');
   if (popoverEls.length) {
     popoverEls.popover();
     popoverEls.on('click', function (e) {

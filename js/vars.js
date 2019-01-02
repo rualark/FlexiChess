@@ -38,6 +38,13 @@ for (let i=0; i<MAX_RULES; ++i) {
   rpar['b'][i] = [];
   rpar['w'][i] = [];
 }
+let rdif = []; // Rule parameters for each player
+rdif['b'] = [];
+rdif['w'] = [];
+for (let i=0; i<MAX_RULES; ++i) {
+  rdif['b'][i] = [];
+  rdif['w'][i] = [];
+}
 let rs_b, rs_w;
 
 let color_to_pid = [];
@@ -78,5 +85,7 @@ let posMoves = [];
 let posMoves2 = [];
 // Active rules
 let ract = [];
+// Piece values sum
+let pvsum = [];
 // Moves disabled by each rule
 let rdis = [];

@@ -2,8 +2,8 @@
 
 <footer class="container">
   <p>&copy; <a href="http://arkhipenko.weebly.com" target="_blank">Aleksey Arkhipenko</a> 2019
-    - <a href="contact.php">Contact</a> - <a href="privacy.php">Privacy Policy</a> -
-    <a href="tos.php">Terms and Conditions</a>
+    - <a href="contact.php">Contact</a> - <a target="_blank" href="privacy.php">Privacy Policy</a> -
+    <a target="_blank" href="tos.php">Terms and Conditions</a>
   </p>
 </footer>
 
@@ -13,7 +13,7 @@
 <script>
   $(function () {
     $('[data-toggle="tooltip"]').tooltip()
-  })
+  });
   $(document).ready(function(){
     $('[data-toggle="popover"]').popover();
   });

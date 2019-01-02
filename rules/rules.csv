@@ -64,3 +64,5 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 164;80;999;;;I must protect;Move to protection or capture (XX turns);I can either capture or move to square, which is protected by my other pieces (during first XX turns)
 165;110;999;;;I must protect;Move to max protection (XX turns);I can move only to square, which is protected by maximum number of my pieces (during first XX turns)
 166;90;999;;;I must protect;Move to max protection or capture (XX turns);I can capture or move to square, which is protected by maximum number of my pieces (during first XX turns)
+167;0;;-10;;Rule control;Remove rules if score <YY;All limiting rules are disabled if my Stockfish evaluated score falled below YY in my previous turn
+168;0;;-10;;Rule control;Remove rules if material <YY;All limiting rules are disabled if my material balance is below YY
