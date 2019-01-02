@@ -1007,6 +1007,80 @@ function DisableSCANegativeEffect(rid) {
   ValidateRule(rid);
 }
 
+function DisableProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except increasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableProtectOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except increasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt >= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMaxProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let max_prot = -1;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] > max_prot)
+      max_prot = prot[i];
+  }
+  // Disable all moves except max protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] < max_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMaxProtectOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let max_prot = -1;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] > max_prot)
+      max_prot = prot[i];
+  }
+  // Disable all moves except max protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] < max_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableNoMoveToUnprotected(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1126,9 +1200,13 @@ function DisableMoves() {
   DisableNeedQueenMoves(144);
   DisableCantMoveIntoAttackButCapture(145);
   DisableCreateAttack(146);
-  DisableCreateAttack(147);
+  DisableCreateAttackOrCapture(147);
   DisableCreateAttackByProtected(148);
   DisableCreateAttackByProtectedOrCaptureStronger(149);
+  DisableProtect(169);
+  DisableProtectOrCapture(170);
+  DisableMaxProtect(171);
+  DisableMaxProtectOrCapture(172);
   DisableMustTakeWithPawn(150);
   DisableCreateAttackNotAttacked(154);
   DisableMustTakeUnprotectedOrStronger(151);
