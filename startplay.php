@@ -33,7 +33,9 @@ function show_ruleset_select($id, $color, $val){
   echo "<option value=0>None</option>\n";
   // Load rules
   $r = mysqli_query($ml,
-    "SELECT * FROM rulesets");
+    "SELECT * FROM rulesets 
+    ORDER BY playcount DESC, time_created DESC
+    LIMIT 200");
   echo mysqli_error($ml);
   $n = mysqli_num_rows($r);
   for ($i=0; $i<$n; ++$i) {

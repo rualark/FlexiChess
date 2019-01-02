@@ -69,5 +69,12 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 171;100;999;;;I must protect;Max protect count (XX turns);My move must max out the number of my protections (during firxt XX turns)
 173;100;999;;;I must protect;Max incrementing protect count (XX turns);My move must max out the number of my protections if I can increase it (during firxt XX turns)
 172;90;999;;;I must protect;Max protect count or capture (XX turns);My move must be either a capture or should max out the number of my protections (during firxt XX turns)
+174;80;999;;;I must protect;Max incrementing protect count or capture (XX turns);My move must be either a capture or should max out the number of my protections if I can increase it (during firxt XX turns)
 167;0;;-10;;Rule control;Remove rules if score <YY;All limiting rules are disabled if my Stockfish evaluated score falled below YY in my previous turn
 168;0;;-10;;Rule control;Remove rules if material <YY;All limiting rules are disabled if my material balance is below YY
+175;100;999;;;I can't protect;Decrease protect count (XX turns);My move must result in decrease in number of my protections (during firxt XX turns)
+176;90;999;;;I can't protect;Decrease protect count or capture (XX turns);My move must be either capture or result in decrease in number of my protections (during firxt XX turns)
+177;100;999;;;I can't protect;Min protect count (XX turns);My move must minimize the number of my protections (during firxt XX turns)
+178;100;999;;;I can't protect;Min protect count or capture (XX turns);My move must be either capture or should minimize the number of my protections (during firxt XX turns)
+179;100;999;;;I can't protect;Min decrementing protect count (XX turns);My move must minimize the number of my protections if I can decrease it (during firxt XX turns)
+180;80;999;;;I can't protect;Min decrementing protect count or capture (XX turns);My move must be either a capture or should minimize the number of my protections if I can decrease it (during firxt XX turns)

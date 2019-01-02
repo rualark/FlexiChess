@@ -1020,16 +1020,44 @@ function DisableProtect(rid) {
   ValidateRule(rid);
 }
 
+function DisableUnProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableProtectOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Disable all moves except increasing protection
+  // Disable all moves except increasing protection or capture
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     if (tpiece) continue;
     if (base_acnt >= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnProtectOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection or capture
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1058,6 +1086,52 @@ function DisableMaxProtect(rid) {
   ValidateRule(rid);
 }
 
+function DisableMinProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinProtectOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMaxProtectIfIncr(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1075,6 +1149,77 @@ function DisableMaxProtectIfIncr(rid) {
   // Disable all moves except max protection
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
+    if (prot[i] < max_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinProtectIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinProtectIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMaxProtectIfIncrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get maximum protection
+  let max_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] > max_prot)
+      max_prot = prot[i];
+  }
+  //console.log("Max protection: ", max_prot, base_acnt, prot);
+  // Disable all moves except max protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
     if (prot[i] < max_prot)
       DisableMove(i);
   }
@@ -1232,6 +1377,13 @@ function DisableMoves() {
   DisableMaxProtect(171);
   DisableMaxProtectIfIncr(173);
   DisableMaxProtectOrCapture(172);
+  DisableMaxProtectIfIncrOrCapture(174);
+  DisableUnProtect(175);
+  DisableUnProtectOrCapture(176);
+  DisableMinProtect(177);
+  DisableMinProtectOrCapture(178);
+  DisableMinProtectIfDecr(179);
+  DisableMinProtectIfDecrOrCapture(180);
   DisableMustTakeWithPawn(150);
   DisableCreateAttackNotAttacked(154);
   DisableMustTakeUnprotectedOrStronger(151);
