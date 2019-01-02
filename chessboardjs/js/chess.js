@@ -783,7 +783,7 @@ var Chess = function(fen) {
       /* if empty square or wrong color */
       if (board[i] == null || board[i].color !== color2) continue;
 
-      acnt += attacked(color, i);
+      acnt += attackedCnt(color, i);
     }
 
     return acnt;

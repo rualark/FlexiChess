@@ -89,3 +89,5 @@ let ract = [];
 let pvsum = [];
 // Moves disabled by each rule
 let rdis = [];
+// Moves allowed by each rule
+let rall = [];

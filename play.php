@@ -571,11 +571,15 @@ function ValidateRule(rid) {
   // Apply other rules
   else {
     rdis[rid] = [];
+    rall[rid] = [];
     for (let i=0; i<posMoves.length; ++i) {
       if (posMoves[i].disabled === 1) {
         ract[rid] = 2;
         posMoves[i].disabled = 2;
         rdis[rid].push(posMoves[i]);
+      }
+      else if (posMoves[i].disabled === 0) {
+        rall[rid].push(posMoves[i]);
       }
     }
   }
@@ -636,7 +640,13 @@ function ShowRules() {
         if (rdis_st !== '') rdis_st += ', ';
         rdis_st += rdis[rid][i].from + '-' + rdis[rid][i].to;
       }
+      let rall_st = "";
+      for (let i=0; i<rall[rid].length; ++i) {
+        if (rall_st !== '') rall_st += ', ';
+        rall_st += rall[rid][i].from + '-' + rall[rid][i].to;
+      }
       st2 += "\nThis rule limits moves: " + rdis_st;
+      st2 += "\nThis rule allowed moves: " + rall_st;
     }
     else if (ract[rid] === 1) st2 += "\nThis rule does not currently limit moves";
     else st2 += "\nThis rule is not active due to low possibility";
