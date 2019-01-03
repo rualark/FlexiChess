@@ -1316,6 +1316,20 @@ function DisableMoveToMaxProtectedOrCapture(rid) {
   ValidateRule(rid);
 }
 
+function DisableBadPosition(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  console.log("PVS: ", pvs_cur);
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    console.log(getMyPVS(move.chess));
+    if (pvs_cur <= getMyPVS(move.chess, game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMoves() {
   // First run checks that force moves
   // Then run checks that disable moves
@@ -1384,6 +1398,7 @@ function DisableMoves() {
   DisableMinProtectOrCapture(178);
   DisableMinProtectIfDecr(179);
   DisableMinProtectIfDecrOrCapture(180);
+  DisableBadPosition(181);
   DisableMustTakeWithPawn(150);
   DisableCreateAttackNotAttacked(154);
   DisableMustTakeUnprotectedOrStronger(151);

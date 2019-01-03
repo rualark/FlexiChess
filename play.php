@@ -529,11 +529,11 @@ function pValueSum(color) {
   for (let i = 0; i <= 119; i++) {
     /* did we run off the end of the board */
     if (i & 0x88) { i += 7; continue; }
-    if (typeof game.board[i] !== 'undefined' && game.board[i] != null) {
-      let pv = pvalue[game.board[i].type];
-      if (game.board[i].color === color) {
+    let piece = game.geti(i);
+    if (piece != null) {
+      let pv = pvalue[piece.type];
+      if (piece.color === color) {
         totalEvaluation += pv;
-        //console.log("Evaluated", game.board[i], pv);
       }
     }
   }

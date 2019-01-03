@@ -62,12 +62,43 @@ let evaluateBoard = function (game) {
   for (let i = 0; i <= 119; i++) {
     /* did we run off the end of the board */
     if (i & 0x88) { i += 7; continue; }
-    let pv = getPieceValue(game.board[i], i % 16, Math.floor(i / 16));
+    let pv = getPieceValue(game.geti(i), i % 16, Math.floor(i / 16));
     totalEvaluation += pv;
-    //console.log("Evaluated", game.board[i], i % 16, Math.floor(i / 16), pv);
   }
   return totalEvaluation;
 };
+
+function getMyPVS(game, color) {
+  let totalEvaluation = 0;
+  for (let i = 0; i <= 119; i++) {
+    /* did we run off the end of the board */
+    if (i & 0x88) { i += 7; continue; }
+    let piece = game.geti(i);
+    if (piece === null) continue;
+    if (piece.color !== color) continue;
+    let pv;
+    let x = i % 16;
+    let y = Math.floor(i / 16);
+    let isWhite = piece.color === 'w';
+    if (piece.type === 'p') {
+      pv = isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x];
+    } else if (piece.type === 'r') {
+      pv = isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x];
+    } else if (piece.type === 'n') {
+      pv = knightEval[y][x];
+    } else if (piece.type === 'b') {
+      pv = isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x];
+    } else if (piece.type === 'q') {
+      pv = evalQueen[y][x];
+    } else if (piece.type === 'k') {
+      pv = isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x];
+    }
+    console.log("Evaluated " + piece.type + " at " + x + "/" + y + " to " + pv);
+    totalEvaluation += pv;
+  }
+  console.log("Tota: " + totalEvaluation);
+  return totalEvaluation;
+}
 
 let reverseArray = function(array) {
   return array.slice().reverse();

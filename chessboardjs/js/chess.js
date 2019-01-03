@@ -410,6 +410,11 @@ var Chess = function(fen) {
     return (piece) ? {type: piece.type, color: piece.color} : null;
   }
 
+  function geti(square) {
+    let piece = board[square];
+    return (piece) ? {type: piece.type, color: piece.color} : null;
+  }
+
   function put(piece, square) {
     /* check for valid piece object */
     if (!('type' in piece && 'color' in piece)) {
@@ -1669,8 +1674,14 @@ var Chess = function(fen) {
       return put(piece, square);
     },
 
+    // Get piece by name
     get: function(square) {
       return get(square);
+    },
+
+    // Get piece by id
+    geti: function(square) {
+      return geti(square);
     },
 
     remove: function(square) {
