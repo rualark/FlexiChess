@@ -603,8 +603,25 @@ function ChooseRules() {
   let no_limits = 0;
   let sign = 1;
   if (game.turn() === 'b') sign = -1;
-  if (ract[167] && sign * eval_score[game.history().length - 1] < rpar[game.turn()][167][1] * 100) no_limits = 1;
-  if (ract[168] && pvsum[game.turn()] - pvsum[game.them()] < rpar[game.turn()][168][1]) no_limits = 1;
+  if (ract[167] && sign * eval_score[game.history().length - 1] < rpar[game.turn()][167][1] * 100) {
+    ract[167] = 2;
+    no_limits = 1;
+  }
+  if (ract[168] && pvsum[game.turn()] - pvsum[game.them()] < rpar[game.turn()][168][1]) {
+    ract[168] = 2;
+    no_limits = 1;
+  }
+  if (ract[193]) {
+    for (let i=0; i<rpar[game.turn()][193][1]; ++i) {
+      if (hist.length <= i) break;
+      console.log("Checking hist ", i, hist.length - 1 - i, hist[hist.length - 1 - i]);
+      if (hist[hist.length - 1 - i].captured) {
+        ract[193] = 2;
+        no_limits = 1;
+        break;
+      }
+    }
+  }
   if (no_limits) {
     ract.forEach(function(item, i, arr) {
       console.log("Disabling rule: ", i, rdif[game.turn()][i]);
@@ -635,18 +652,22 @@ function ShowRules() {
     st2 = st2.replace(/ZZ/g, rpar[game.turn()][rid][2]);
     if (ract[rid] === 3) st2 += "\nThis rule tried to limit moves, but it disabled all possible moves";
     else if (ract[rid] === 2) {
-      let rdis_st = "";
-      for (let i=0; i<rdis[rid].length; ++i) {
-        if (rdis_st !== '') rdis_st += ', ';
-        rdis_st += rdis[rid][i].from + '-' + rdis[rid][i].to;
+      if (typeof rdis[rid] !== 'undefined') {
+        let rdis_st = "";
+        for (let i = 0; i < rdis[rid].length; ++i) {
+          if (rdis_st !== '') rdis_st += ', ';
+          rdis_st += rdis[rid][i].from + '-' + rdis[rid][i].to;
+        }
+        st2 += "\nThis rule limits moves: " + rdis_st;
       }
-      let rall_st = "";
-      for (let i=0; i<rall[rid].length; ++i) {
-        if (rall_st !== '') rall_st += ', ';
-        rall_st += rall[rid][i].from + '-' + rall[rid][i].to;
+      if (typeof rall[rid] !== 'undefined') {
+        let rall_st = "";
+        for (let i = 0; i < rall[rid].length; ++i) {
+          if (rall_st !== '') rall_st += ', ';
+          rall_st += rall[rid][i].from + '-' + rall[rid][i].to;
+        }
+        st2 += "\nThis rule allowed moves: " + rall_st;
       }
-      st2 += "\nThis rule limits moves: " + rdis_st;
-      st2 += "\nThis rule allowed moves: " + rall_st;
     }
     else if (ract[rid] === 1) st2 += "\nThis rule does not currently limit moves";
     else st2 += "\nThis rule is not active due to low possibility";

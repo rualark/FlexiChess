@@ -1316,7 +1316,7 @@ function DisableMoveToMaxProtectedOrCapture(rid) {
   ValidateRule(rid);
 }
 
-function DisableBadPosition(rid) {
+function DisableWorsePosition(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let pvs_cur = getMyPVS(game, game.turn());
@@ -1370,7 +1370,7 @@ function DisableWorstPositionIfDecr(rid) {
   ValidateRule(rid);
 }
 
-function DisableBadPositionOrCapture(rid) {
+function DisableWorsePositionOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let pvs_cur = getMyPVS(game, game.turn());
@@ -1425,6 +1425,120 @@ function DisableWorstPositionIfDecrOrCapture(rid) {
     let tpiece = game.get(move.to);
     if (tpiece) continue;
     if (pvs_min < pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBetterPosition(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (pvs_cur >= getMyPVS(move.chess, game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBestPosition(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get best position
+  let pvs_max = -1000000;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] > pvs_max)
+      pvs_max = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (pvs_max > pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBestPositionIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_max = pvs_cur;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] > pvs_max)
+      pvs_max = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (pvs_max > pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBetterPositionOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_cur >= getMyPVS(move.chess, game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBestPositionOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_max = -1000000;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] > pvs_max)
+      pvs_max = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_max > pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBestPositionIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_max = pvs_cur;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] > pvs_max)
+      pvs_max = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_max > pvs[i])
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1498,12 +1612,18 @@ function DisableMoves() {
   DisableMinProtectOrCapture(178);
   DisableMinProtectIfDecr(179);
   DisableMinProtectIfDecrOrCapture(180);
-  DisableBadPosition(181);
+  DisableWorsePosition(181);
   DisableWorstPosition(182);
   DisableWorstPositionIfDecr(183);
-  DisableBadPositionOrCapture(184);
+  DisableWorsePositionOrCapture(184);
   DisableWorstPositionOrCapture(185);
   DisableWorstPositionIfDecrOrCapture(186);
+  DisableBetterPosition(187);
+  DisableBestPosition(188);
+  DisableBestPositionIfDecr(189);
+  DisableBetterPositionOrCapture(190);
+  DisableBestPositionOrCapture(191);
+  DisableBestPositionIfDecrOrCapture(192);
   DisableMustTakeWithPawn(150);
   DisableCreateAttackNotAttacked(154);
   DisableMustTakeUnprotectedOrStronger(151);

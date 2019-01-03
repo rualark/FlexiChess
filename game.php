@@ -41,6 +41,7 @@ $w = mysqli_fetch_assoc($r);
 
 $pgn = str_replace("\n", "\\n", $w['pgn']);
 $pgn = str_replace("\r", "", $pgn);
+$pgn = str_replace("'", "\'", $pgn);
 
 echo "<link rel='stylesheet' href='chessboardjs/css/chessboard-0.3.0.min.css'>\n";
 echo "<link rel='stylesheet' href='css/play.css'>\n";

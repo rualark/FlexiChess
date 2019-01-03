@@ -72,6 +72,7 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 174;80;999;;;I must protect;Max incrementing protect count or capture (XX turns);My move must be either a capture or should max out the number of my protections if I can increase it (during firxt XX turns)
 167;0;;-10;;Rule control;Remove rules if score <YY;All limiting rules are disabled if my Stockfish evaluated score falled below YY in my previous turn
 168;0;;-10;;Rule control;Remove rules if material <YY;All limiting rules are disabled if my material balance is below YY
+193;0;;2;;Rule control;Remove rules after capture (YY turns);All limiting rules are disabled during YY turns after you capture my piece
 175;100;999;;;I can't protect;Decrease protect count (XX turns);My move must result in decrease in number of my protections (during firxt XX turns)
 176;90;999;;;I can't protect;Decrease protect count or capture (XX turns);My move must be either capture or result in decrease in number of my protections (during firxt XX turns)
 177;100;999;;;I can't protect;Min protect count (XX turns);My move must minimize the number of my protections (during firxt XX turns)
@@ -84,3 +85,9 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 184;80;999;;;Position evaluation;Move to worse position or capture (XX turns);I have to capture or move to position, which evaluation is worse then my current (during first XX turns)
 185;80;999;;;Position evaluation;Move to worst position or capture (XX turns);I have to capture or move to position, which evaluation is worst (during first XX turns)
 186;80;999;;;Position evaluation;Move to worst position if decreasing or capture (XX turns);I have to capture or move to position, which evaluation is worst if I can decrease it (during first XX turns)
+187;40;999;;;Position evaluation;Move to better position (XX turns);I have to move to position, which evaluation is better then my current (during first XX turns)
+188;40;999;;;Position evaluation;Move to best position (XX turns);I have to move to position, which evaluation is best (during first XX turns)
+189;40;999;;;Position evaluation;Move to best position if increasing (XX turns);I have to move to position, which evaluation is best if I can increase it (during first XX turns)
+190;40;999;;;Position evaluation;Move to better position or capture (XX turns);I have to capture or move to position, which evaluation is better then my current (during first XX turns)
+191;40;999;;;Position evaluation;Move to best position or capture (XX turns);I have to capture or move to position, which evaluation is best (during first XX turns)
+192;40;999;;;Position evaluation;Move to best position if increasing or capture (XX turns);I have to capture or move to position, which evaluation is best if I can increase it (during first XX turns)
