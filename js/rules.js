@@ -1320,11 +1320,111 @@ function DisableBadPosition(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let pvs_cur = getMyPVS(game, game.turn());
-  console.log("PVS: ", pvs_cur);
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    console.log(getMyPVS(move.chess));
     if (pvs_cur <= getMyPVS(move.chess, game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableWorstPosition(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_min = 1000000;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] < pvs_min)
+      pvs_min = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (pvs_min < pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableWorstPositionIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_min = pvs_cur;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] < pvs_min)
+      pvs_min = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (pvs_min < pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableBadPositionOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_cur <= getMyPVS(move.chess, game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableWorstPositionOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_min = 1000000;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] < pvs_min)
+      pvs_min = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_min < pvs[i])
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableWorstPositionIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let pvs_cur = getMyPVS(game, game.turn());
+  // Get worst position
+  let pvs_min = pvs_cur;
+  let pvs = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    pvs[i] = getMyPVS(move.chess, game.turn());
+    if (pvs[i] < pvs_min)
+      pvs_min = pvs[i];
+  }
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (pvs_min < pvs[i])
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1399,6 +1499,11 @@ function DisableMoves() {
   DisableMinProtectIfDecr(179);
   DisableMinProtectIfDecrOrCapture(180);
   DisableBadPosition(181);
+  DisableWorstPosition(182);
+  DisableWorstPositionIfDecr(183);
+  DisableBadPositionOrCapture(184);
+  DisableWorstPositionOrCapture(185);
+  DisableWorstPositionIfDecrOrCapture(186);
   DisableMustTakeWithPawn(150);
   DisableCreateAttackNotAttacked(154);
   DisableMustTakeUnprotectedOrStronger(151);

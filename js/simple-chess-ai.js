@@ -93,10 +93,10 @@ function getMyPVS(game, color) {
     } else if (piece.type === 'k') {
       pv = isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x];
     }
-    console.log("Evaluated " + piece.type + " at " + x + "/" + y + " to " + pv);
+    //console.log("Evaluated " + piece.type + " at " + x + "/" + y + " to " + pv);
     totalEvaluation += pv;
   }
-  console.log("Tota: " + totalEvaluation);
+  //console.log("Total: " + totalEvaluation);
   return totalEvaluation;
 }
 
