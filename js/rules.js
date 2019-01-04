@@ -862,7 +862,7 @@ function DisableCreateAttackByProtected(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.them());
-  // Disable all moves except increasing attacks
+  // Disable all moves except increasing attacks by protected
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (base_acnt >= move.chess.all_attacks(game.turn(), game.them()) ||
@@ -1020,32 +1020,6 @@ function DisableProtect(rid) {
   ValidateRule(rid);
 }
 
-function DisableNotProtect(rid) {
-  if (!ract[rid]) return;
-  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Disable all moves except decreasing protection
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    if (base_acnt < move.chess.all_attacks(game.turn(), game.turn()))
-      DisableMove(i);
-  }
-  ValidateRule(rid);
-}
-
-function DisableUnProtect(rid) {
-  if (!ract[rid]) return;
-  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Disable all moves except decreasing protection
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
-      DisableMove(i);
-  }
-  ValidateRule(rid);
-}
-
 function DisableProtectOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1056,21 +1030,6 @@ function DisableProtectOrCapture(rid) {
     let tpiece = game.get(move.to);
     if (tpiece) continue;
     if (base_acnt >= move.chess.all_attacks(game.turn(), game.turn()))
-      DisableMove(i);
-  }
-  ValidateRule(rid);
-}
-
-function DisableUnProtectOrCapture(rid) {
-  if (!ract[rid]) return;
-  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Disable all moves except decreasing protection or capture
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    let tpiece = game.get(move.to);
-    if (tpiece) continue;
-    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1099,11 +1058,39 @@ function DisableMaxProtect(rid) {
   ValidateRule(rid);
 }
 
+function DisableUnProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnProtectOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection or capture
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableMinProtect(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Get maximum protection
+  // Get min protection
   let min_prot = 1000000;
   let prot = [];
   for (let i=0; i<posMoves.length; ++i) {
@@ -1125,7 +1112,7 @@ function DisableMinProtectOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Get maximum protection
+  // Get min protection
   let min_prot = 1000000;
   let prot = [];
   for (let i=0; i<posMoves.length; ++i) {
@@ -1140,6 +1127,332 @@ function DisableMinProtectOrCapture(rid) {
     let tpiece = game.get(move.to);
     if (tpiece) continue;
     if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinProtectIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get min protection
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinProtectIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Get min protection
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNotProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt < move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Disable all moves except decreasing attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt <= move.chess.all_attacks(game.them(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnAttackOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Disable all moves except decreasing attack or capture
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt <= move.chess.all_attacks(game.them(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Get min attack
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.them(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    console.log("Disabling ", move.from, move.to, move.chess.all_attacks(game.them(), game.turn()), base_acnt, min_prot);
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinAttackOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Get min attack
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.them(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinAttackIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Get min attack
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.them(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinAttackIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Get min attack
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.them(), game.turn());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNotAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.them(), game.turn());
+  // Disable all moves except decreasing attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt < move.chess.all_attacks(game.them(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnIAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except decreasing attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.them()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableUnIAttackOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except decreasing attack or capture
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (base_acnt <= move.chess.all_attacks(game.them(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinIAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Get min attack
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.them());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinIAttackOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Get min attack
+  let min_prot = 1000000;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.them());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinIAttackIfDecr(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Get min attack
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.them());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableMinIAttackIfDecrOrCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Get min attack
+  let min_prot = base_acnt;
+  let prot = [];
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    prot[i] = move.chess.all_attacks(game.turn(), game.them());
+    if (prot[i] < min_prot)
+      min_prot = prot[i];
+  }
+  // Disable all moves except min attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (prot[i] > min_prot)
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableNotIAttack(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.them());
+  // Disable all moves except decreasing attack
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt < move.chess.all_attacks(game.turn(), game.them()))
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1163,52 +1476,6 @@ function DisableMaxProtectIfIncr(rid) {
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     if (prot[i] < max_prot)
-      DisableMove(i);
-  }
-  ValidateRule(rid);
-}
-
-function DisableMinProtectIfDecr(rid) {
-  if (!ract[rid]) return;
-  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Get maximum protection
-  let min_prot = base_acnt;
-  let prot = [];
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
-    if (prot[i] < min_prot)
-      min_prot = prot[i];
-  }
-  // Disable all moves except min protection
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    if (prot[i] > min_prot)
-      DisableMove(i);
-  }
-  ValidateRule(rid);
-}
-
-function DisableMinProtectIfDecrOrCapture(rid) {
-  if (!ract[rid]) return;
-  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.turn());
-  // Get maximum protection
-  let min_prot = base_acnt;
-  let prot = [];
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    prot[i] = move.chess.all_attacks(game.turn(), game.turn());
-    if (prot[i] < min_prot)
-      min_prot = prot[i];
-  }
-  // Disable all moves except min protection
-  for (let i=0; i<posMoves.length; ++i) {
-    let move = posMoves[i];
-    let tpiece = game.get(move.to);
-    if (tpiece) continue;
-    if (prot[i] > min_prot)
       DisableMove(i);
   }
   ValidateRule(rid);
@@ -1619,13 +1886,29 @@ function DisableMoves() {
   DisableMaxProtectIfIncr(173);
   DisableMaxProtectOrCapture(172);
   DisableMaxProtectIfIncrOrCapture(174);
-  DisableNotProtect(195);
+
   DisableUnProtect(175);
   DisableUnProtectOrCapture(176);
   DisableMinProtect(177);
   DisableMinProtectOrCapture(178);
   DisableMinProtectIfDecr(179);
   DisableMinProtectIfDecrOrCapture(180);
+  DisableNotProtect(195);
+  DisableUnAttack(196);
+  DisableUnAttackOrCapture(197);
+  DisableMinAttack(198);
+  DisableMinAttackOrCapture(199);
+  DisableMinAttackIfDecr(200);
+  DisableMinAttackIfDecrOrCapture(201);
+  DisableNotAttack(202);
+  DisableUnIAttack(203);
+  DisableUnIAttackOrCapture(204);
+  DisableMinIAttack(205);
+  DisableMinIAttackOrCapture(206);
+  DisableMinIAttackIfDecr(207);
+  DisableMinIAttackIfDecrOrCapture(208);
+  DisableNotIAttack(209);
+
   DisableWorsePosition(181);
   DisableWorstPosition(182);
   DisableWorstPositionIfDecr(183);

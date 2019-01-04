@@ -563,6 +563,7 @@ function RevertRule() {
 }
 
 function ValidateRule(rid) {
+  console.log("Find: ", findObjectByKey(posMoves, 'disabled', 0));
   // Revert rules that give no possible moves
   if (findObjectByKey(posMoves, 'disabled', 0) === null) {
     RevertRule();
