@@ -1020,6 +1020,19 @@ function DisableProtect(rid) {
   ValidateRule(rid);
 }
 
+function DisableNotProtect(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let base_acnt = game.all_attacks(game.turn(), game.turn());
+  // Disable all moves except decreasing protection
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    if (base_acnt < move.chess.all_attacks(game.turn(), game.turn()))
+      DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
 function DisableUnProtect(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1606,6 +1619,7 @@ function DisableMoves() {
   DisableMaxProtectIfIncr(173);
   DisableMaxProtectOrCapture(172);
   DisableMaxProtectIfIncrOrCapture(174);
+  DisableNotProtect(195);
   DisableUnProtect(175);
   DisableUnProtectOrCapture(176);
   DisableMinProtect(177);

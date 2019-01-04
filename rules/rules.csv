@@ -80,6 +80,7 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 178;100;999;;;I can't protect;Min protect count or capture (XX turns);My move must be either capture or should minimize the number of my protections (during firxt XX turns)
 179;100;999;;;I can't protect;Min decrementing protect count (XX turns);My move must minimize the number of my protections if I can decrease it (during firxt XX turns)
 180;80;999;;;I can't protect;Min decrementing protect count or capture (XX turns);My move must be either a capture or should minimize the number of my protections if I can decrease it (during firxt XX turns)
+195;100;999;;;I can't protect;Can't increase protect count (XX turns);My move must not result in increase in number of my protections (during firxt XX turns)
 181;80;999;;;Position evaluation;Move to worse position (XX turns);I have to move to position, which evaluation is worse then my current (during first XX turns)
 182;80;999;;;Position evaluation;Move to worst position (XX turns);I have to move to position, which evaluation is worst (during first XX turns)
 183;80;999;;;Position evaluation;Move to worst position if decreasing (XX turns);I have to move to position, which evaluation is worst if I can decrease it (during first XX turns)
