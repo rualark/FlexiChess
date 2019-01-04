@@ -15,7 +15,7 @@ $board_width_padded = $board_width - 5;
 login();
 if (!$uid) {
   $ua = array();
-  $ua['u_depth'] = 12;
+  $ua['u_adepth'] = 16;
   $ua['u_bestmoves'] = 1;
   $ua['u_hint'] = 1;
   $ua['u_score'] = 1;
@@ -75,7 +75,7 @@ echo "</table>";
 <script>
 
 <?php
-echo "eval_depth = $ua[u_depth];";
+echo "eval_depth = $ua[u_adepth];";
 ?>
 
 let game = Chess();

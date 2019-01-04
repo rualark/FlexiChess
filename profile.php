@@ -10,6 +10,7 @@ $hint = secure_variable("login");
 $score = secure_variable("score");
 $bestmoves = secure_variable("bestmoves");
 $depth = secure_variable("depth");
+$adepth = secure_variable("adepth");
 $undo = secure_variable("undo");
 
 $title = "$site_name: Settings";
@@ -19,7 +20,7 @@ if (!login()) {
 }
 
 if ($act == "save") {
-  $q = "UPDATE users SET u_login='$login', u_name='$name', u_depth='$depth', u_bestmoves='" .
+  $q = "UPDATE users SET u_login='$login', u_name='$name', u_depth='$depth', u_adepth='$adepth', u_bestmoves='" .
     (isset($_GET['bestmoves'])?1:0) . "', u_hint='" .
     (isset($_GET['hint'])?1:0) . "', u_undo='" .
     (isset($_GET['undo'])?1:0) . "', u_score='" .
@@ -52,8 +53,12 @@ echo "<hr>";
     <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
   </div>
   <div class="form-group">
-    <label for="name"><b>Evaluation depth for Stockfish algorithm (16 recommended)</b></label>
+    <label for="depth"><b>Game evaluation depth for Stockfish algorithm (13 recommended)</b></label>
     <input type="number" min=1 max=1000 class="form-control" id="depth" name=depth value="<?=$ua['u_depth'];?>" required>
+  </div>
+  <div class="form-group">
+    <label for="adepth"><b>Analysis evaluation depth for Stockfish algorithm (18 recommended)</b></label>
+    <input type="number" min=1 max=1000 class="form-control" id="adepth" name=adepth value="<?=$ua['u_adepth'];?>" required>
   </div>
   <div class="form-check">
     <input type="checkbox" class="form-check-input" name="hint" id="hint" <? if ($ua['u_hint']) echo "checked";?>>
