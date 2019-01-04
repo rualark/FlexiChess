@@ -200,8 +200,8 @@ foreach ($rla as $rid => $rl) {
   }
 }
 
-echo "rs['b'] = $rs_b;\n";
-echo "rs['w'] = $rs_w;\n";
+echo "rs_b = $rs_b;\n";
+echo "rs_w = $rs_w;\n";
 echo "eval_depth = $ua[u_depth];";
 ?>
 
@@ -251,7 +251,7 @@ let onDragStart = function(source, piece, position, orientation) {
     (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
     (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
-    if (rs[game.turn()]) return false;
+    return false;
   }
   HighlightSquares(source);
   if (game.game_over() === true ||
@@ -469,14 +469,13 @@ function MakeMove(move, updateBoard) {
     (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
     (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
-    if (rs[game.turn()]) {
-      if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
-      window.setTimeout(function () {
-        MakeMove(move, updateBoard)
-      }, 100);
-      return;
-    }
+    if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
+    window.setTimeout(function () {
+      MakeMove(move, updateBoard)
+    }, 100);
+    return;
   }
+  analyse_move(eval_best_move[game.history().length], game.history().length, game.turn());
   let result = game.move(move);
   // Send move
   $.ajax({
@@ -502,13 +501,7 @@ function MakeMove(move, updateBoard) {
   });
   if (updateBoard) board.position(game.fen());
   removeGreySquares();
-  if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
-    stockfish_go(game.turn());
-    return;
-  }
-  else {
-    updateStatus();
-  }
+  updateStatus();
   return result;
 }
 
@@ -559,13 +552,7 @@ function Undo() {
   }
   let result = game.undo();
   board.position(game.fen());
-  if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
-    stockfish_go(game.turn());
-    return;
-  }
-  else {
-    updateStatus();
-  }
+  updateStatus();
   return;
 }
 
@@ -709,7 +696,7 @@ function ShowRules() {
   if (game.turn() === 'b') bst = hst;
   else wst = hst;
   rst = "<font color=white>Black rule set: ";
-  if (rs['b']) {
+  if (rs_b) {
     rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_b?>&act=view><font color=white><?=$rsb['rs_name']?></font></a>";
   }
   else {
@@ -737,14 +724,11 @@ function ShowRules() {
 }
 
 let updateStatus = function() {
-  if (engine_eval.state === 'Running' ||
-    engine_ana.state === 'Running' ||
-    (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
-    (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
-  ) {
-    if (debugging) console.log("updateStatus is waiting until stockfish finishes");
-    window.setTimeout(updateStatus, 100);
-    return;
+  if (engine[game.turn()]) {
+    if (engine[game.turn()].state === 'Wait') {
+      stockfish_go(game.turn());
+      return;
+    }
   }
   eval_pos(game.history().length, game.turn());
   pvsum['b'] = pValueSum('b');
@@ -1027,12 +1011,7 @@ init_engine_eval();
 init_engine_ana();
 init_engine('b');
 init_engine('w');
-if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
-  stockfish_go(game.turn());
-}
-else {
-  updateStatus();
-}
+updateStatus();
 
 </script>
 

@@ -22,9 +22,6 @@ let eval_cur_depth = 0;
 
 let engine = [];
 
-// Rule sets ids
-let rs = [];
-
 let ptypes = ['p', 'b', 'n', 'r', 'q', 'k'];
 
 let game_id = 0;
