@@ -844,8 +844,8 @@ function ShowPgn() {
     mypgn2 += "<td>&nbsp;" + eval_best_move[i].san + "&nbsp;";
     if (i<turn - 1) {
       mypgn2 += "<td>&nbsp;" + eval_best_move[i + 1].san + "&nbsp;";
-      <? if ($ua['u_bestmoves']) echo "mypgn += mypgn2;" ?>
     }
+    <? if ($ua['u_bestmoves']) echo "mypgn += mypgn2;" ?>
   }
   mypgn += "</table>";
   pgnEl.html(mypgn);
