@@ -200,8 +200,8 @@ foreach ($rla as $rid => $rl) {
   }
 }
 
-echo "rs_b = $rs_b;\n";
-echo "rs_w = $rs_w;\n";
+echo "rs['b'] = $rs_b;\n";
+echo "rs['w'] = $rs_w;\n";
 echo "eval_depth = $ua[u_depth];";
 ?>
 
@@ -251,7 +251,7 @@ let onDragStart = function(source, piece, position, orientation) {
     (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
     (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
-    return false;
+    if (rs[game.turn()]) return false;
   }
   HighlightSquares(source);
   if (game.game_over() === true ||
@@ -469,13 +469,14 @@ function MakeMove(move, updateBoard) {
     (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
     (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
   ) {
-    if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
-    window.setTimeout(function () {
-      MakeMove(move, updateBoard)
-    }, 100);
-    return;
+    if (rs[game.turn()]) {
+      if (debugging) console.log("Move " + move.to + " is waiting until stockfish finishes");
+      window.setTimeout(function () {
+        MakeMove(move, updateBoard)
+      }, 100);
+      return;
+    }
   }
-  analyse_move(eval_best_move[game.history().length], game.history().length, game.turn());
   let result = game.move(move);
   // Send move
   $.ajax({
@@ -501,7 +502,13 @@ function MakeMove(move, updateBoard) {
   });
   if (updateBoard) board.position(game.fen());
   removeGreySquares();
-  updateStatus();
+  if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
+    stockfish_go(game.turn());
+    return;
+  }
+  else {
+    updateStatus();
+  }
   return result;
 }
 
@@ -552,7 +559,13 @@ function Undo() {
   }
   let result = game.undo();
   board.position(game.fen());
-  updateStatus();
+  if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
+    stockfish_go(game.turn());
+    return;
+  }
+  else {
+    updateStatus();
+  }
   return;
 }
 
@@ -613,10 +626,21 @@ function ChooseRules() {
   }
   if (ract[193]) {
     for (let i=0; i<rpar[game.turn()][193][1]; ++i) {
-      if (hist.length <= i) break;
-      console.log("Checking hist ", i, hist.length - 1 - i, hist[hist.length - 1 - i]);
-      if (hist[hist.length - 1 - i].captured) {
+      if (hist.length <= i * 2) break;
+      //console.log("Checking hist ", i, hist.length - 1 - i, hist[hist.length - 1 - i]);
+      if (hist[hist.length - 1 - i * 2].captured) {
         ract[193] = 2;
+        no_limits = 1;
+        break;
+      }
+    }
+  }
+  if (ract[194]) {
+    for (let i=0; i<rpar[game.turn()][194][1]; ++i) {
+      if (hist.length <= i * 2 + 1) break;
+      //console.log("Checking hist ", i, hist.length - 1 - i, hist[hist.length - 1 - i]);
+      if (hist[hist.length - 2 - i * 2].captured) {
+        ract[194] = 2;
         no_limits = 1;
         break;
       }
@@ -685,7 +709,7 @@ function ShowRules() {
   if (game.turn() === 'b') bst = hst;
   else wst = hst;
   rst = "<font color=white>Black rule set: ";
-  if (rs_b) {
+  if (rs['b']) {
     rst += "<a target=_blank href=ruleset.php?rs_id=<?=$rs_b?>&act=view><font color=white><?=$rsb['rs_name']?></font></a>";
   }
   else {
@@ -713,11 +737,14 @@ function ShowRules() {
 }
 
 let updateStatus = function() {
-  if (engine[game.turn()]) {
-    if (engine[game.turn()].state === 'Wait') {
-      stockfish_go(game.turn());
-      return;
-    }
+  if (engine_eval.state === 'Running' ||
+    engine_ana.state === 'Running' ||
+    (typeof engine['b'] !== 'undefined' && engine['b'].state === 'Running') ||
+    (typeof engine['w'] !== 'undefined' && engine['w'].state === 'Running')
+  ) {
+    if (debugging) console.log("updateStatus is waiting until stockfish finishes");
+    window.setTimeout(updateStatus, 100);
+    return;
   }
   eval_pos(game.history().length, game.turn());
   pvsum['b'] = pValueSum('b');
@@ -1000,7 +1027,12 @@ init_engine_eval();
 init_engine_ana();
 init_engine('b');
 init_engine('w');
-updateStatus();
+if (engine[game.turn()] && engine[game.turn()].state === 'Wait') {
+  stockfish_go(game.turn());
+}
+else {
+  updateStatus();
+}
 
 </script>
 
