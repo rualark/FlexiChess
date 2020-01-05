@@ -779,10 +779,9 @@ var Chess = function(fen) {
   }
 
   function closeCnt(color, square) {
-    let acnt = 0;
     let x = square % 16;
     let y = Math.floor(square / 16);
-    console.log(square, x, y, board[square + 1], color);
+    //console.log(square, x, y, board[square + 1], color);
     let cnt = 0;
     if (y > 0 && board[square - 16] && board[square - 16].color === color) ++cnt;
     if (y < 7 && board[square + 16] && board[square + 16].color === color) ++cnt;
@@ -793,6 +792,27 @@ var Chess = function(fen) {
     if (x < 7 && y > 0 && board[square - 15] && board[square - 15].color === color) ++cnt;
     if (x < 7 && y < 7 && board[square + 17] && board[square + 17].color === color) ++cnt;
     return cnt;
+  }
+
+  function all_closeCnt() {
+    let cnt = 0;
+    for (var square = SQUARES.a8; square <= SQUARES.h1; square++) {
+      if (square & 0x88) { square += 7; continue; }
+      if (board[square] == null) continue;
+      let x = square % 16;
+      let y = Math.floor(square / 16);
+      let color = board[square].color;
+      //console.log(square, x, y, board[square + 1], color);
+      if (y > 0 && board[square - 16] && board[square - 16].color !== color) ++cnt;
+      if (y < 7 && board[square + 16] && board[square + 16].color !== color) ++cnt;
+      if (x > 0 && board[square - 1] && board[square - 1].color !== color) ++cnt;
+      if (x < 7 && board[square + 1] && board[square + 1].color !== color) ++cnt;
+      if (x > 0 && y > 0 && board[square - 17] && board[square - 17].color !== color) ++cnt;
+      if (x > 0 && y < 7 && board[square + 15] && board[square + 15].color !== color) ++cnt;
+      if (x < 7 && y > 0 && board[square - 15] && board[square - 15].color !== color) ++cnt;
+      if (x < 7 && y < 7 && board[square + 17] && board[square + 17].color !== color) ++cnt;
+    }
+    return cnt / 2;
   }
 
   // Count all attacks from color pieces to color2 pieces
@@ -1388,6 +1408,10 @@ var Chess = function(fen) {
 
     closeCnt: function(close_color, square) {
       return closeCnt(close_color, SQUARES[square])
+    },
+
+    all_closeCnt: function() {
+      return all_closeCnt()
     },
 
     all_attacks: function(attacked_by_color, attack_to_color) {

@@ -146,6 +146,18 @@ function getSquareY(square) {
   return parseInt(square[1]) - 1;
 }
 
+function make_square(x, y) {
+  let y2 = 8-y;
+  if (x === 0) return 'a' + y2.toString();
+  if (x === 1) return 'b' + y2.toString();
+  if (x === 2) return 'c' + y2.toString();
+  if (x === 3) return 'd' + y2.toString();
+  if (x === 4) return 'e' + y2.toString();
+  if (x === 5) return 'f' + y2.toString();
+  if (x === 6) return 'g' + y2.toString();
+  if (x === 7) return 'h' + y2.toString();
+}
+
 function distance(square1, square2) {
   let x1 = getSquareX(square1);
   let y1 = getSquareY(square1);

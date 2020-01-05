@@ -55,17 +55,21 @@ function DisableMoveToClose(rid) {
 function DisableMoveNotFromClose(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let accnt0 = game.all_closeCnt();
+  console.log('Accnt', accnt0);
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     //console.log(move, move.chess.closeCnt(game.them(), move.from));
-    if (game.closeCnt(game.them(), move.from) <= rpar[game.turn()][rid][1]) {
+    if (tpiece) continue;
+    let ccnt0 = game.closeCnt(game.them(), move.from);
+    let ccnt1 = move.chess.closeCnt(game.them(), move.to);
+    let accnt1 = move.chess.all_closeCnt();
+    if (ccnt0 > rpar[game.turn()][rid][1] && ccnt1 >= ccnt0) {
       DisableMove(i);
     }
-    else {
-      if (!tpiece && move.chess.closeCnt(game.them(), move.to) > rpar[game.turn()][rid][1]) {
-        DisableMove(i);
-      }
+    if (accnt0 > rpar[game.turn()][rid][2] && accnt1 >= accnt0) {
+      DisableMove(i);
     }
   }
   ValidateRule(rid);
@@ -83,6 +87,50 @@ function DisableLen(rid, ptype, moveonly) {
     let dist = distance(move.from, move.to);
     if (dist < rpar[game.turn()][rid][1] || dist > rpar[game.turn()][rid][2]) {
       DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableNotBackLine(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  let piece;
+  let found = 100;
+  for (let x=0; x<8; ++x) {
+    piece = game.get(make_square(x, 0));
+    if (piece && (piece.type === 'r' || piece.type === 'q') && piece.color === game.them()) {
+      found = Math.min(found, 0);
+    }
+    piece = game.get(make_square(x, 1));
+    //console.log('Checking', piece);
+    if (piece && (piece.type === 'r' || piece.type === 'q') && piece.color === game.them()) {
+      found = Math.min(found, 1);
+    }
+  }
+  if (found === 100) return;
+  //console.log('Found', found);
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    //console.log(move.from, move.to);
+    if (found === 0) {
+      if (move.from[1] !== '8' && move.from[1] !== '7') {
+        DisableMove(i);
+      }
+      if (move.to[1] === '8') {
+        DisableMove(i);
+      }
+    }
+    if (found === 1) {
+      if (move.from[1] !== '7') {
+        //console.log('Disabing', move);
+        DisableMove(i);
+      }
+      if (move.to[1] === '7' || move.to[1] === '8') {
+        DisableMove(i);
+      }
     }
   }
   ValidateRule(rid);
@@ -397,6 +445,24 @@ function DisableCantMultiCapture(rid) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     // Disable if taking again
+    if (tpiece) DisableMove(i);
+  }
+  ValidateRule(rid);
+}
+
+function DisableCheckCapture(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  if (hist.length < 1) return;
+  // Check if previous move was check
+  let undo_move = game.undo();
+  let in_check = game.in_check();
+  game.move(undo_move);
+  if (!in_check) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    // Disable if taking
     if (tpiece) DisableMove(i);
   }
   ValidateRule(rid);
@@ -1393,6 +1459,8 @@ function DisableUnIAttack(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.them());
+  let base_ycnt = game.all_attacks(game.them(), game.turn());
+  if (base_ycnt <= rpar[game.turn()][rid][1] && base_acnt + base_ycnt <= rpar[game.turn()][rid][2]) return;
   // Disable all moves except decreasing attack
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -1406,6 +1474,8 @@ function DisableUnIAttackOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.them());
+  let base_ycnt = game.all_attacks(game.them(), game.turn());
+  if (base_ycnt <= rpar[game.turn()][rid][1] && base_acnt + base_ycnt <= rpar[game.turn()][rid][2]) return;
   // Disable all moves except decreasing attack or capture
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -1902,6 +1972,7 @@ function DisableMoves() {
   DisableCanMoveOnlyAttacked(105);
   DisableCanMoveOnlyAttackedNoCapture(112);
   DisablePawns(103);
+  DisableCheckCapture(220);
   DisableCantCaptureStronger(106);
   DisablePawnsDoubleMove(107);
   DisableMoveIntoAttack(109);
@@ -1921,6 +1992,10 @@ function DisableMoves() {
   DisableRandomPieceTypes(123);
   DisableRandomMoves(125);
   DisableRandomPieces(126);
+  DisableNotAttack(202);
+  DisableUnIAttack(203);
+  DisableUnIAttackOrCapture(204);
+  DisableNotBackLine(219);
   DisableCantCaptureWithCaptured(127);
   DisableCantCaptureStrongerWithCaptured(128);
   DisableCantMultiCapture(129);
@@ -1964,9 +2039,6 @@ function DisableMoves() {
   DisableMinAttackOrCapture(199);
   DisableMinAttackIfDecr(200);
   DisableMinAttackIfDecrOrCapture(201);
-  DisableNotAttack(202);
-  DisableUnIAttack(203);
-  DisableUnIAttackOrCapture(204);
   DisableMinIAttack(205);
   DisableMinIAttackOrCapture(206);
   DisableMinIAttackIfDecr(207);
