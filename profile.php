@@ -6,7 +6,7 @@ require_once "lib/auth.php";
 $act = secure_variable("act");
 $name = secure_variable("name");
 $login = secure_variable("login");
-$hint = secure_variable("login");
+$hint = secure_variable("hint");
 $score = secure_variable("score");
 $bestmoves = secure_variable("bestmoves");
 $depth = secure_variable("depth");

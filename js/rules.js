@@ -24,6 +24,70 @@ function DisablePawnsDoubleMove(rid) {
   ValidateRule(rid);
 }
 
+function DisableMoveFromClose(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    //console.log(move, move.chess.closeCnt(game.them(), move.from));
+    if (!tpiece && game.closeCnt(game.them(), move.from) > rpar[game.turn()][rid][1]) {
+      DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableMoveToClose(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    //console.log(move, move.chess.closeCnt(game.them(), move.from));
+    if (!tpiece && move.chess.closeCnt(game.them(), move.to) > rpar[game.turn()][rid][1]) {
+      DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableMoveNotFromClose(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    //console.log(move, move.chess.closeCnt(game.them(), move.from));
+    if (game.closeCnt(game.them(), move.from) <= rpar[game.turn()][rid][1]) {
+      DisableMove(i);
+    }
+    else {
+      if (!tpiece && move.chess.closeCnt(game.them(), move.to) > rpar[game.turn()][rid][1]) {
+        DisableMove(i);
+      }
+    }
+  }
+  ValidateRule(rid);
+}
+
+function DisableLen(rid, ptype, moveonly) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (move.piece !== ptype) continue;
+    console.log(ptype, move.piece, move.from, move.to);
+    if (moveonly === 'moveonly' && tpiece) continue;
+    let dist = distance(move.from, move.to);
+    if (dist < rpar[game.turn()][rid][1] || dist > rpar[game.turn()][rid][2]) {
+      DisableMove(i);
+    }
+  }
+  ValidateRule(rid);
+}
+
 function DisableMustTakeIfStronger(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
@@ -1908,6 +1972,15 @@ function DisableMoves() {
   DisableMinIAttackIfDecr(207);
   DisableMinIAttackIfDecrOrCapture(208);
   DisableNotIAttack(209);
+  DisableMoveFromClose(210);
+  DisableMoveToClose(211);
+  DisableMoveNotFromClose(212);
+  DisableLen(213, 'b', 'moveonly');
+  DisableLen(214, 'r', 'moveonly');
+  DisableLen(215, 'q', 'moveonly');
+  DisableLen(216, 'b');
+  DisableLen(217, 'r');
+  DisableLen(218, 'q');
 
   DisableWorsePosition(181);
   DisableWorstPosition(182);

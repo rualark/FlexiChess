@@ -778,6 +778,23 @@ var Chess = function(fen) {
     return acnt;
   }
 
+  function closeCnt(color, square) {
+    let acnt = 0;
+    let x = square % 16;
+    let y = Math.floor(square / 16);
+    console.log(square, x, y, board[square + 1], color);
+    let cnt = 0;
+    if (y > 0 && board[square - 16] && board[square - 16].color === color) ++cnt;
+    if (y < 7 && board[square + 16] && board[square + 16].color === color) ++cnt;
+    if (x > 0 && board[square - 1] && board[square - 1].color === color) ++cnt;
+    if (x < 7 && board[square + 1] && board[square + 1].color === color) ++cnt;
+    if (x > 0 && y > 0 && board[square - 17] && board[square - 17].color === color) ++cnt;
+    if (x > 0 && y < 7 && board[square + 15] && board[square + 15].color === color) ++cnt;
+    if (x < 7 && y > 0 && board[square - 15] && board[square - 15].color === color) ++cnt;
+    if (x < 7 && y < 7 && board[square + 17] && board[square + 17].color === color) ++cnt;
+    return cnt;
+  }
+
   // Count all attacks from color pieces to color2 pieces
   function all_attacks(color, color2) {
     let acnt = 0;
@@ -1367,6 +1384,10 @@ var Chess = function(fen) {
 
     attackedCnt: function(attacked_by_color, square) {
       return attackedCnt(attacked_by_color, SQUARES[square])
+    },
+
+    closeCnt: function(close_color, square) {
+      return closeCnt(close_color, SQUARES[square])
     },
 
     all_attacks: function(attacked_by_color, attack_to_color) {

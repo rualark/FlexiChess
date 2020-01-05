@@ -1,4 +1,5 @@
 <?php
+  ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED & ~E_WARNING);
 function start_time() {
   GLOBAL $starttime, $starttime2;
   $mtime = microtime();

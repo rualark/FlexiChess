@@ -31,6 +31,7 @@ if (!$uid) {
   $ua['u_bestmoves'] = 1;
   $ua['u_hint'] = 1;
   $ua['u_score'] = 1;
+  $ua['u_undo'] = 1;
 }
 
 load_rules();

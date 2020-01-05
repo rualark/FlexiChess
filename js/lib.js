@@ -130,3 +130,29 @@ function build_move_analysis(i, move, best_move, move_score, best_score, move_sc
   move_comment = "Good move (" + move_score_st + "). Best move was " + best_move.san + " (" + best_score_st + ")" + best_path_st;
   move_comment2 = "<b>Good move</b> (" + move_score_st + ")";
 }
+
+function getSquareX(square) {
+  if (square[0] === 'a') return 0;
+  if (square[0] === 'b') return 1;
+  if (square[0] === 'c') return 2;
+  if (square[0] === 'd') return 3;
+  if (square[0] === 'e') return 4;
+  if (square[0] === 'f') return 5;
+  if (square[0] === 'g') return 6;
+  if (square[0] === 'h') return 7;
+}
+
+function getSquareY(square) {
+  return parseInt(square[1]) - 1;
+}
+
+function distance(square1, square2) {
+  let x1 = getSquareX(square1);
+  let y1 = getSquareY(square1);
+  let x2 = getSquareX(square2);
+  let y2 = getSquareY(square2);
+  // Vertical distanct
+  if (x1 === x2) return Math.abs(y2 - y1);
+  // Diagonal or horizontal distance
+  return Math.abs(x2 - x1);
+}
