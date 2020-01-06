@@ -19,6 +19,9 @@ let ana_turn = 0;
 let ana_color = 'w';
 let ana_cur_depth = 0;
 let eval_cur_depth = 0;
+let qk_dist = 0;
+let my_king = 0;
+let your_queen = 0;
 
 let engine = [];
 

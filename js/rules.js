@@ -56,12 +56,14 @@ function DisableMoveNotFromClose(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let accnt0 = game.all_closeCnt();
-  console.log('Accnt', accnt0);
+  //console.log('Accnt', accnt0);
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     //console.log(move, move.chess.closeCnt(game.them(), move.from));
     if (tpiece) continue;
+    if (move.chess.attackedCnt(game.them(), move.to) < game.attackedCnt(game.them(), move.from))
+      continue;
     let ccnt0 = game.closeCnt(game.them(), move.from);
     let ccnt1 = move.chess.closeCnt(game.them(), move.to);
     let accnt1 = move.chess.all_closeCnt();
@@ -82,7 +84,7 @@ function DisableLen(rid, ptype, moveonly) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     if (move.piece !== ptype) continue;
-    console.log(ptype, move.piece, move.from, move.to);
+    //console.log(ptype, move.piece, move.from, move.to);
     if (moveonly === 'moveonly' && tpiece) continue;
     let dist = distance(move.from, move.to);
     if (dist < rpar[game.turn()][rid][1] || dist > rpar[game.turn()][rid][2]) {
@@ -110,16 +112,24 @@ function DisableNotBackLine(rid) {
   }
   if (found === 100) return;
   //console.log('Found', found);
+  let good_moves = 0;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     if (tpiece) continue;
+    if (!move.disabled && move.chess.attackedCnt(game.them(), move.to) < game.attackedCnt(game.them(), move.from)) {
+      good_moves++;
+      continue;
+    }
     //console.log(move.from, move.to);
     if (found === 0) {
       if (move.from[1] !== '8' && move.from[1] !== '7') {
         DisableMove(i);
       }
       if (move.to[1] === '8') {
+        DisableMove(i);
+      }
+      if (move.to[1] === '7' && move.from[1] !== '8') {
         DisableMove(i);
       }
     }
@@ -132,8 +142,16 @@ function DisableNotBackLine(rid) {
         DisableMove(i);
       }
     }
+    if (!move.disabled && !move.chess.attackedCnt(game.them(), move.to)) {
+      good_moves++;
+    }
   }
-  ValidateRule(rid);
+  if (!good_moves) {
+    RevertRule();
+    ract[rid] = 3;
+  } else {
+    ValidateRule(rid);
+  }
 }
 
 function DisableMustTakeIfStronger(rid) {
@@ -1205,6 +1223,7 @@ function DisableUnProtectOrCapture(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
   let base_acnt = game.all_attacks(game.turn(), game.turn());
+  if (base_acnt < rpar[game.turn()][rid][1]) return;
   // Disable all moves except decreasing protection or capture
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
@@ -1365,7 +1384,7 @@ function DisableMinAttack(rid) {
   // Disable all moves except min attack
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    console.log("Disabling ", move.from, move.to, move.chess.all_attacks(game.them(), game.turn()), base_acnt, min_prot);
+    //console.log("Disabling ", move.from, move.to, move.chess.all_attacks(game.them(), game.turn()), base_acnt, min_prot);
     if (prot[i] > min_prot)
       DisableMove(i);
   }
@@ -1462,12 +1481,23 @@ function DisableUnIAttack(rid) {
   let base_ycnt = game.all_attacks(game.them(), game.turn());
   if (base_ycnt <= rpar[game.turn()][rid][1] && base_acnt + base_ycnt <= rpar[game.turn()][rid][2]) return;
   // Disable all moves except decreasing attack
+  let good_moves = 0;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (base_acnt <= move.chess.all_attacks(game.turn(), game.them()))
+    if (base_acnt <= move.chess.all_attacks(game.turn(), game.them())) {
       DisableMove(i);
+    } else {
+      if (!move.disabled && !move.chess.attackedCnt(game.them(), move.to)) {
+        good_moves++;
+      }
+    }
   }
-  ValidateRule(rid);
+  if (!good_moves) {
+    RevertRule();
+    ract[rid] = 3;
+  } else {
+    ValidateRule(rid);
+  }
 }
 
 function DisableUnIAttackOrCapture(rid) {
@@ -1477,14 +1507,29 @@ function DisableUnIAttackOrCapture(rid) {
   let base_ycnt = game.all_attacks(game.them(), game.turn());
   if (base_ycnt <= rpar[game.turn()][rid][1] && base_acnt + base_ycnt <= rpar[game.turn()][rid][2]) return;
   // Disable all moves except decreasing attack or capture
+  let good_moves = 0;
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
     let tpiece = game.get(move.to);
     if (tpiece) continue;
-    if (base_acnt <= move.chess.all_attacks(game.them(), game.turn()))
+    if (!move.disabled && move.chess.attackedCnt(game.them(), move.to) < game.attackedCnt(game.them(), move.from)) {
+      good_moves++;
+      continue;
+    }
+    if (base_acnt <= move.chess.all_attacks(game.them(), game.turn())) {
       DisableMove(i);
+    } else {
+      if (!move.disabled && !move.chess.attackedCnt(game.them(), move.to)) {
+        good_moves++;
+      }
+    }
   }
-  ValidateRule(rid);
+  if (!good_moves) {
+    RevertRule();
+    ract[rid] = 3;
+  } else {
+    ValidateRule(rid);
+  }
 }
 
 function DisableMinIAttack(rid) {
@@ -1582,12 +1627,20 @@ function DisableMinIAttackIfDecrOrCapture(rid) {
 function DisableNotIAttack(rid) {
   if (!ract[rid]) return;
   if (hist.length > rpar[game.turn()][rid][0] * 2) return;
-  let base_acnt = game.all_attacks(game.turn(), game.them());
-  // Disable all moves except decreasing attack
+  let base_acnt = game.all_attacks_np(game.turn(), game.them());
+  // Disable moves that increase attack count more than YY
   for (let i=0; i<posMoves.length; ++i) {
     let move = posMoves[i];
-    if (base_acnt < move.chess.all_attacks(game.turn(), game.them()))
+    //let tpiece = game.get(move.to);
+    //if (tpiece) continue;
+    let acnt = move.chess.all_attacks_np(game.turn(), game.them());
+    let gift = game.attacksCnt_np(game.them(), move.from);
+    console.log('Gift', acnt, gift, base_acnt);
+    // If not increasing much and will not be attacked
+    if (acnt + gift - base_acnt > rpar[game.turn()][rid][1] &&
+      !move.chess.attackedCnt(game.them(), move.to)) {
       DisableMove(i);
+    }
   }
   ValidateRule(rid);
 }
@@ -1958,7 +2011,82 @@ function DisableBestPositionIfDecrOrCapture(rid) {
   ValidateRule(rid);
 }
 
+function get_qk_dist() {
+  if (qk_dist) return;
+  my_king = game.find_piece('k', game.turn());
+  your_queen = game.find_piece('q', game.them());
+  qk_dist = distance(my_king, your_queen);
+}
+
+function DisableKingGrouped(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  get_qk_dist();
+  if (qk_dist >= rpar[game.turn()][rid][1]) return;
+  let ccnt0 = game.closeCnt(game.turn(), my_king);
+  let good_moves = 0;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (!move.disabled && move.chess.attackedCnt(game.them(), move.to) < game.attackedCnt(game.them(), move.from)) {
+      good_moves++;
+      continue;
+    }
+    let ccnt1 = move.chess.closeCnt(game.turn(), my_king);
+    //console.log('King grouped', move, ccnt0, ccnt1);
+    if (ccnt1 >= ccnt0) {
+      DisableMove(i);
+    } else {
+      if (!move.disabled && !move.chess.attackedCnt(game.them(), move.to)) {
+        good_moves++;
+      }
+    }
+  }
+  if (!good_moves) {
+    RevertRule();
+    ract[rid] = 3;
+  } else {
+    ValidateRule(rid);
+  }
+}
+
+function DisableKingFileShield(rid) {
+  if (!ract[rid]) return;
+  if (hist.length > rpar[game.turn()][rid][0] * 2) return;
+  get_qk_dist();
+  if (qk_dist >= rpar[game.turn()][rid][1]) return;
+  let scnt0 = game.shieldsCnt(game.turn(), my_king).reduce((a, b) => a + b, 0);
+  let good_moves = 0;
+  for (let i=0; i<posMoves.length; ++i) {
+    let move = posMoves[i];
+    let tpiece = game.get(move.to);
+    if (tpiece) continue;
+    if (!move.disabled && move.chess.attackedCnt(game.them(), move.to) < game.attackedCnt(game.them(), move.from)) {
+      good_moves++;
+      continue;
+    }
+    let scnt1 = move.chess.shieldsCnt(game.turn(), my_king).reduce((a, b) => a + b, 0);
+    //console.log('King shield', move, scnt0, scnt1);
+    if (scnt1 >= scnt0) {
+      DisableMove(i);
+    } else {
+      if (!move.disabled && !move.chess.attackedCnt(game.them(), move.to)) {
+        //console.log('Good move', move);
+        good_moves++;
+      }
+    }
+  }
+  if (!good_moves) {
+    RevertRule();
+    ract[rid] = 3;
+  } else {
+    ValidateRule(rid);
+  }
+}
+
 function DisableMoves() {
+  qk_dist = 0;
   // First run checks that force moves
   // Then run checks that disable moves
   DisableNotBestStockfish(158);
@@ -2053,6 +2181,8 @@ function DisableMoves() {
   DisableLen(216, 'b');
   DisableLen(217, 'r');
   DisableLen(218, 'q');
+  DisableKingGrouped(221);
+  DisableKingFileShield(222);
 
   DisableWorsePosition(181);
   DisableWorstPosition(182);

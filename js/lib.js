@@ -163,8 +163,5 @@ function distance(square1, square2) {
   let y1 = getSquareY(square1);
   let x2 = getSquareX(square2);
   let y2 = getSquareY(square2);
-  // Vertical distanct
-  if (x1 === x2) return Math.abs(y2 - y1);
-  // Diagonal or horizontal distance
-  return Math.abs(x2 - x1);
+  return Math.max(Math.abs(y2 - y1), Math.abs(x2 - x1));
 }

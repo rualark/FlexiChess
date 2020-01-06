@@ -733,6 +733,42 @@ var Chess = function(fen) {
     return false;
   }
 
+  function attacks(square_to, square_from) {
+    let acnt = 0;
+    var piece = board[square_from];
+    var difference = square_from - square_to;
+    var index = difference + 119;
+
+    if (ATTACKS[index] & (1 << SHIFTS[piece.type])) {
+      if (piece.type === PAWN) {
+        if (difference > 0) {
+          if (piece.color === WHITE) ++acnt;
+        } else {
+          if (piece.color === BLACK) ++acnt
+        }
+        return acnt;
+      }
+
+      /* if the piece is a knight or a king */
+      if (piece.type === 'n' || piece.type === 'k') {
+        ++acnt;
+        return acnt;
+      }
+
+      var offset = RAYS[index];
+      var j = square_from + offset;
+
+      var blocked = false;
+      while (j !== square_to) {
+        if (board[j] != null) { blocked = true; break; }
+        j += offset;
+      }
+
+      if (!blocked) ++acnt;
+    }
+    return acnt;
+  }
+
   function attackedCnt(color, square) {
     let acnt = 0;
     for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
@@ -741,38 +777,36 @@ var Chess = function(fen) {
 
       /* if empty square or wrong color */
       if (board[i] == null || board[i].color !== color) continue;
+      acnt += attacks(square, i);
+    }
 
-      var piece = board[i];
-      var difference = i - square;
-      var index = difference + 119;
+    return acnt;
+  }
 
-      if (ATTACKS[index] & (1 << SHIFTS[piece.type])) {
-        if (piece.type === PAWN) {
-          if (difference > 0) {
-            if (piece.color === WHITE) ++acnt;
-          } else {
-            if (piece.color === BLACK) ++acnt
-          }
-          continue;
-        }
+  function attacksCnt(color, square) {
+    let acnt = 0;
+    for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
+      /* did we run off the end of the board */
+      if (i & 0x88) { i += 7; continue; }
 
-        /* if the piece is a knight or a king */
-        if (piece.type === 'n' || piece.type === 'k') {
-          ++acnt;
-          continue;
-        }
+      /* if empty square or wrong color */
+      if (board[i] == null || board[i].color !== color) continue;
+      acnt += attacks(i, square);
+    }
 
-        var offset = RAYS[index];
-        var j = i + offset;
+    return acnt;
+  }
 
-        var blocked = false;
-        while (j !== square) {
-          if (board[j] != null) { blocked = true; break; }
-          j += offset;
-        }
+  function attacksCnt_np(color, square) {
+    let acnt = 0;
+    for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
+      /* did we run off the end of the board */
+      if (i & 0x88) { i += 7; continue; }
 
-        if (!blocked) ++acnt;
-      }
+      /* if empty square or wrong color */
+      if (board[i] == null || board[i].color !== color) continue;
+      if (board[i].type === 'p') continue;
+      acnt += attacks(i, square);
     }
 
     return acnt;
@@ -815,6 +849,67 @@ var Chess = function(fen) {
     return cnt / 2;
   }
 
+  function shieldsCnt(color, square) {
+    let cnt = [0, 0, 0, 0, 0, 0, 0, 0];
+    let x0 = square % 16;
+    let y0 = Math.floor(square / 16);
+    for (let x = 0; x < x0; ++x) {
+      let i = y0 * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[0];
+    }
+    for (let x = x0 + 1; x < 8; ++x) {
+      let i = y0 * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[1];
+    }
+    for (let y = 0; y < y0; ++y) {
+      let i = y * 16 + x0;
+      if (board[i] && board[i].color === color) ++cnt[2];
+    }
+    for (let y = y0 + 1; y < 8; ++y) {
+      let i = y * 16 + x0;
+      if (board[i] && board[i].color === color) ++cnt[3];
+    }
+    let y = y0;
+    for (let x = x0 - 1; x >= 0; --x) {
+      y--;
+      if (x < 0 || y < 0) break;
+      let i = y * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[4];
+    }
+    y = y0;
+    for (let x = x0 + 1; x < 8; ++x) {
+      y++;
+      if (x > 7 || y > 7) break;
+      let i = y * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[5];
+    }
+    y = y0;
+    for (let x = x0 + 1; x < 8; ++x) {
+      y--;
+      if (x > 7 || y < 0) break;
+      let i = y * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[6];
+    }
+    y = y0;
+    for (let x = x0 - 1; x >= 0; --x) {
+      y++;
+      if (x < 0 || y > 7) break;
+      let i = y * 16 + x;
+      if (board[i] && board[i].color === color) ++cnt[4];
+    }
+    return cnt;
+  }
+
+  function find_piece(type, color) {
+    for (var square = SQUARES.a8; square <= SQUARES.h1; square++) {
+      if (square & 0x88) { square += 7; continue; }
+      if (board[square] == null) continue;
+      if (board[square].color !== color) continue;
+      if (board[square].type !== type) continue;
+      return algebraic(square);
+    }
+  }
+
   // Count all attacks from color pieces to color2 pieces
   function all_attacks(color, color2) {
     let acnt = 0;
@@ -828,6 +923,17 @@ var Chess = function(fen) {
       acnt += attackedCnt(color, i);
     }
 
+    return acnt;
+  }
+
+  function all_attacks_np(color, color2) {
+    let acnt = 0;
+    for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
+      if (i & 0x88) { i += 7; continue; }
+      if (board[i] == null || board[i].color !== color2) continue;
+      if (board[i].type === 'p') continue;
+      acnt += attackedCnt(color, i);
+    }
     return acnt;
   }
 
@@ -1406,16 +1512,36 @@ var Chess = function(fen) {
       return attackedCnt(attacked_by_color, SQUARES[square])
     },
 
+    attacksCnt: function(attacks_color, square) {
+      return attacksCnt(attacks_color, SQUARES[square])
+    },
+
+    attacksCnt_np: function(attacks_color, square) {
+      return attacksCnt_np(attacks_color, SQUARES[square])
+    },
+
     closeCnt: function(close_color, square) {
       return closeCnt(close_color, SQUARES[square])
+    },
+
+    shieldsCnt: function(close_color, square) {
+      return shieldsCnt(close_color, SQUARES[square])
     },
 
     all_closeCnt: function() {
       return all_closeCnt()
     },
 
+    find_piece: function(type, color) {
+      return find_piece(type, color)
+    },
+
     all_attacks: function(attacked_by_color, attack_to_color) {
       return all_attacks(attacked_by_color, attack_to_color)
+    },
+
+    all_attacks_np: function(attacked_by_color, attack_to_color) {
+      return all_attacks_np(attacked_by_color, attack_to_color)
     },
 
     pgn: function(options) {

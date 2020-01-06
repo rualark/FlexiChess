@@ -93,12 +93,14 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 193;0;;2;;Rule control;Remove rules after you capture (YY turns);All limiting rules are disabled during YY turns after you capture my piece
 194;0;;2;;Rule control;Remove rules after I capture (YY turns);All limiting rules are disabled during YY turns after I capture your piece
 175;100;999;;;I can't protect;Decrease protect count (XX turns);My move must result in decrease in number of my protections (during first XX turns)
-176;90;999;;;I can't protect;Decrease protect count or capture (XX turns);My move must be either capture or result in decrease in number of my protections (during first XX turns)
+176;90;999;4;;I can't protect;Decrease protect count or capture if >YY (XX turns);My move must be either capture or result in decrease in number of my protections if I have more than YY protections (during first XX turns)
 177;100;999;;;I can't protect;Min protect count (XX turns);My move must minimize the number of my protections (during first XX turns)
 178;100;999;;;I can't protect;Min protect count or capture (XX turns);My move must be either capture or should minimize the number of my protections (during first XX turns)
 179;100;999;;;I can't protect;Min decrementing protect count (XX turns);My move must minimize the number of my protections if I can decrease it (during first XX turns)
 180;80;999;;;I can't protect;Min decrementing protect count or capture (XX turns);My move must be either a capture or should minimize the number of my protections if I can decrease it (during first XX turns)
 195;100;999;;;I can't protect;Can't increase protect count (XX turns);My move must not result in increase in number of my protections (during first XX turns)
+221;50;999;4;;I can't protect;Strip king if your queen <YY away (XX turns);I should decrease number of my pieces that surround my king if your queen is closer to my king than YY squares (during first XX turns)
+222;50;999;4;;I can't protect;Cut out king if your queen <YY away (XX turns);I should decrease number of my pieces that are on horizontals and diagonals of my king if your queen is closer to my king than YY squares (during first XX turns)
 181;80;999;;;Position evaluation;Move to worse position (XX turns);I have to move to position, which evaluation is worse then my current (during first XX turns)
 182;80;999;;;Position evaluation;Move to worst position (XX turns);I have to move to position, which evaluation is worst (during first XX turns)
 183;80;999;;;Position evaluation;Move to worst position if decreasing (XX turns);I have to move to position, which evaluation is worst if I can decrease it (during first XX turns)
@@ -117,4 +119,4 @@ Rid;Difficulty;Par0;Par1;Par2;Rgroup;Rname;Rdesc
 206;100;999;;;I can't attack;Min attack count or capture (XX turns);My move must be either capture or should minimize the number of my attacks (during first XX turns)
 207;100;999;;;I can't attack;Min decrementing attack count (XX turns);My move must minimize the number of my attacks if I can decrease it (during first XX turns)
 208;80;999;;;I can't attack;Min decrementing attack count or capture (XX turns);My move must be either a capture or should minimize the number of my attacks if I can decrease it (during first XX turns)
-209;100;999;;;I can't attack;Can't increase attack count (XX turns);My move must not result in increase in number of my attacks (during first XX turns)
+209;100;999;1;;I can't attack;Can't increase attack count >YY (XX turns);My move must not result in increase in number of my attacks on pieces (not pawns) more than YY per turn (during first XX turns), but I can capture
